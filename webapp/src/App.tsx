@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+import LogoImage from './assets/logo.png';
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { FluentProvider, Subtitle1, makeStyles, shorthands, tokens } from '@fluentui/react-components';
@@ -29,10 +30,6 @@ export const useClasses = makeStyles({
         backgroundColor: tokens.colorBrandForeground2,
         color: tokens.colorNeutralForegroundOnBrand,
         display: 'flex',
-        '& h1': {
-            paddingLeft: tokens.spacingHorizontalXL,
-            display: 'flex',
-        },
         height: '48px',
         justifyContent: 'space-between',
         width: '100%',
@@ -41,9 +38,14 @@ export const useClasses = makeStyles({
         marginRight: tokens.spacingHorizontalXXL,
     },
     cornerItems: {
+        alignItems: 'center',
         display: 'flex',
         ...shorthands.gap(tokens.spacingHorizontalS),
     },
+    logo: {
+        height: '35px',
+        paddingLeft: tokens.spacingHorizontalXL,
+    }
 });
 
 enum AppState {
@@ -154,6 +156,7 @@ const Chat = ({
     appState: AppState;
     setAppState: (state: AppState) => void;
 }) => {
+    const { features } = useAppSelector((state: RootState) => state.app);
     const onBackendFound = React.useCallback(() => {
         setAppState(
             AuthHelper.isAuthAAD()
@@ -162,15 +165,24 @@ const Chat = ({
                 : // otherwise, we can load chats immediately
                   AppState.LoadingChats,
         );
+    // CUSTOM: Define the company logo and/or name in the divCompanyLogo div below, with the value from LogoImage being defined on line 2 above
     }, [setAppState]);
     return (
         <div className={classes.container}>
             <div className={classes.header}>
+                <div className={classes.cornerItems} id="divCompanyLogo">
+                    <img className={classes.logo} src={LogoImage} alt='Company logo' />
+                    <Subtitle1 as="h1">Contoso</Subtitle1>
+                </div>
                 <Subtitle1 as="h1">Career GPT</Subtitle1>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
-                            <PluginGallery />
+                            {features[FeatureKeys.PluginsPlannersAndPersonas].enabled && (
+                                <>
+                                    <PluginGallery />
+                                </>
+                            )}
                             <UserSettingsMenu
                                 setLoadingState={() => {
                                     setAppState(AppState.SigningOut);
