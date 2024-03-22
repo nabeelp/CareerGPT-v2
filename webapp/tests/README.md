@@ -1,4 +1,4 @@
-﻿# Copilot Chat Web App Scenario Tests
+﻿# Career GPT Web App Scenario Tests
 
 ## How to set up the tests to run locally
 
