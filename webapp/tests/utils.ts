@@ -27,7 +27,7 @@ export async function loginHelper(page, useraccount, password) {
     }
 
     // After login, the page should redirect back to the app.
-    await expect(page).toHaveTitle('Chat Copilot');
+    await expect(page).toHaveTitle('Career GPT');
 }
 
 export async function loginHelperAnotherUser(page, useraccount, password) {
@@ -44,7 +44,7 @@ export async function loginHelperAnotherUser(page, useraccount, password) {
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     // After login, the page should redirect back to the app.
-    await expect(page).toHaveTitle('Chat Copilot');
+    await expect(page).toHaveTitle('Career GPT');
 
     // Get the permission popup if they open
     page.on('popup', async (popup) => {

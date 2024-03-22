@@ -1,9 +1,9 @@
-# Chat Copilot front end web application
+# Career GPT front end web application
 
-This directory contains the source code for Chat Copilot's frontend web application. The backend web API service component can be found in the [webapi/](../webapi/) directory.
+This directory contains the source code for Career GPT's frontend web application. The backend web API service component can be found in the [webapi/](../webapi/) directory.
 
-## Running the Chat Copilot sample
-To configure and run the full Chat Copilot application, please view the [main instructions](../README.md#instructions).
+## Running the Career GPT sample
+To configure and run the full Career GPT application, please view the [main instructions](../README.md#instructions).
 
 # (Under Development)
 The following material is under development and may not be complete or accurate.
