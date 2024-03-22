@@ -10,11 +10,11 @@ Playwright is a dependency included in package.json. You just need to run `yarn 
 
 ### Set up App registrations
 
-Follow the [instructions](https://github.com/microsoft/chat-copilot#optional-enable-backend-authentication-via-azure-ad) to create two app registrations. This is needed for the multi-user chat test.
+Follow the [instructions](https://github.com/nabeelp/CareerGPT-v2#optional-enable-backend-authentication-via-azure-ad) to create two app registrations. This is needed for the multi-user chat test.
 
 ### Configure the environment
 
--   Follow the [instructions](https://github.com/microsoft/chat-copilot#optional-enable-backend-authentication-via-azure-ad) to configure the `/webapi/appsettings.json` file.
+-   Follow the [instructions](https://github.com/nabeelp/CareerGPT-v2#optional-enable-backend-authentication-via-azure-ad) to configure the `/webapi/appsettings.json` file.
 
 -   You need two test accounts to run the multi-user chat. Make sure the two accounts are under the correct tenant. Enter the account credentials in the .env file.
 
