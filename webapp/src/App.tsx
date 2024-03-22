@@ -89,17 +89,6 @@ const App = () => {
                     }),
                 );
 
-                // Privacy disclaimer for internal Microsoft users
-                if (account.username.split('@')[1] === 'microsoft.com') {
-                    dispatch(
-                        addAlert({
-                            message:
-                                'By using Career GPT, you agree to protect sensitive data, not store it in chat, and allow chat history collection for service improvements. This tool is for internal use only.',
-                            type: AlertType.Info,
-                        }),
-                    );
-                }
-
                 setAppState(AppState.LoadingChats);
             }
         }
