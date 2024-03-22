@@ -10,23 +10,24 @@ import {
     tokens,
 } from '@fluentui/react-components';
 
+// CUSTOM: use https://aka.ms/themedesigner to create your brand ramp and copy the values for 10-160 below
 export const companyBrandRamp: BrandVariants = {
-    10: '#060103',
-    20: '#261018',
-    30: '#431426',
-    40: '#591732',
-    50: '#701A3E',
-    60: '#861F4B',
-    70: '#982C57',
-    80: '#A53E63',
-    90: '#B15070',
-    100: '#BC627E',
-    110: '#C6748B',
-    120: '#CF869A',
-    130: '#D898A8',
-    140: '#E0AAB7',
-    150: '#E8BCC6',
-    160: '#EFCFD6',
+    10: '#020305',
+    20: '#111723',
+    30: '#16263D',
+    40: '#193253',
+    50: '#1B3F6A',
+    60: '#1B4C82',
+    70: '#18599B',
+    80: '#1267B4',
+    90: '#3174C2',
+    100: '#4F82C8',
+    110: '#6790CF',
+    120: '#7D9ED5',
+    130: '#92ACDC',
+    140: '#A6BAE2',
+    150: '#BAC9E9',
+    160: '#CDD8EF',
 };
 
 export const semanticKernelLightTheme: Theme & { colorMeBackground: string } = {
