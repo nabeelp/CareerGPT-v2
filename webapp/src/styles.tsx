@@ -10,7 +10,7 @@ import {
     tokens,
 } from '@fluentui/react-components';
 
-export const semanticKernelBrandRamp: BrandVariants = {
+export const companyBrandRamp: BrandVariants = {
     10: '#060103',
     20: '#261018',
     30: '#431426',
@@ -30,12 +30,12 @@ export const semanticKernelBrandRamp: BrandVariants = {
 };
 
 export const semanticKernelLightTheme: Theme & { colorMeBackground: string } = {
-    ...createLightTheme(semanticKernelBrandRamp),
+    ...createLightTheme(companyBrandRamp),
     colorMeBackground: '#e8ebf9',
 };
 
 export const semanticKernelDarkTheme: Theme & { colorMeBackground: string } = {
-    ...createDarkTheme(semanticKernelBrandRamp),
+    ...createDarkTheme(companyBrandRamp),
     colorMeBackground: '#2b2b3e',
 };
 
