@@ -28,6 +28,7 @@ import { ChatArchiveService } from '../services/ChatArchiveService';
 import { ChatService } from '../services/ChatService';
 import { DocumentImportService } from '../services/DocumentImportService';
 
+// CUSTOM: Change the bot icons here for the different scenarios, or override the icons files listed below
 import botIcon1 from '../../assets/bot-icons/bot-icon-1.png';
 import botIcon2 from '../../assets/bot-icons/bot-icon-2.png';
 import botIcon3 from '../../assets/bot-icons/bot-icon-3.png';
@@ -56,6 +57,7 @@ export const useChat = () => {
     const chatService = new ChatService();
     const documentImportService = new DocumentImportService();
 
+    // CUSTOM: Change the number of bot icons here, by adding or removing the bot icon files
     const botProfilePictures: string[] = [botIcon1, botIcon2, botIcon3, botIcon4, botIcon5];
 
     const userId = activeUserInfo?.id ?? '';
