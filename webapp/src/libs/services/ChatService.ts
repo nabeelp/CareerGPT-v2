@@ -78,6 +78,7 @@ export class ChatService extends BaseService {
         systemDescription: string,
         memoryBalance: number,
         accessToken: string,
+        botPath: string,
     ): Promise<any> => {
         const body: IChatSession = {
             id: chatId,
@@ -85,6 +86,7 @@ export class ChatService extends BaseService {
             systemDescription,
             memoryBalance,
             enabledPlugins: [], // edit will not modify the enabled plugins
+            botPath
         };
 
         const result = await this.getResponseAsync<IChatSession>(

@@ -79,7 +79,7 @@ export const useChat = () => {
         return users.find((user) => user.id === id);
     };
 
-    const createChat = async () => {
+    const createChat = async (botPath: string) => {
         const chatTitle = `CareerGPT @ ${new Date().toLocaleString()}`;
         try {
             await chatService
@@ -99,6 +99,7 @@ export const useChat = () => {
                         userDataLoaded: false,
                         disabled: false,
                         hidden: false,
+                        botPath: botPath,
                     };
 
                     dispatch(addConversation(newChat));
@@ -196,6 +197,7 @@ export const useChat = () => {
                         userDataLoaded: false,
                         disabled: false,
                         hidden: !features[FeatureKeys.MultiUserChat].enabled && chatUsers.length > 1,
+                        botPath: chatSession.botPath,
                     };
                 }
 
@@ -204,13 +206,13 @@ export const useChat = () => {
                 // If there are no non-hidden chats, create a new chat
                 const nonHiddenChats = Object.values(loadedConversations).filter((c) => !c.hidden);
                 if (nonHiddenChats.length === 0) {
-                    await createChat();
+                    await createChat('careerPlan');
                 } else {
                     dispatch(setSelectedConversation(nonHiddenChats[0].id));
                 }
             } else {
                 // No chats exist, create first chat window
-                await createChat();
+                await createChat('careerPlan');
             }
 
             return true;
@@ -253,6 +255,7 @@ export const useChat = () => {
                     userDataLoaded: false,
                     disabled: false,
                     hidden: false,
+                    botPath: chatSession.botPath,
                 };
 
                 dispatch(addConversation(newChat));
@@ -359,6 +362,7 @@ export const useChat = () => {
                     userDataLoaded: false,
                     disabled: false,
                     hidden: false,
+                    botPath: result.botPath,
                 };
 
                 dispatch(addConversation(newChat));
@@ -371,7 +375,7 @@ export const useChat = () => {
         return { success: true, message: '' };
     };
 
-    const editChat = async (chatId: string, title: string, syetemDescription: string, memoryBalance: number) => {
+    const editChat = async (chatId: string, title: string, syetemDescription: string, memoryBalance: number, botPath: string) => {
         try {
             await chatService.editChatAsync(
                 chatId,
@@ -379,6 +383,7 @@ export const useChat = () => {
                 syetemDescription,
                 memoryBalance,
                 await AuthHelper.getSKaaSAccessToken(instance, inProgress),
+                botPath,
             );
         } catch (e: any) {
             const errorMessage = `Error editing chat ${chatId}. Details: ${getErrorDetails(e)}`;
@@ -406,7 +411,7 @@ export const useChat = () => {
 
                 if (Object.values(conversations).filter((c) => !c.hidden && c.id !== chatId).length === 0) {
                     // If there are no non-hidden chats, create a new chat
-                    void createChat();
+                    void createChat('careerPlan');
                 }
             })
             .catch((e: any) => {

@@ -186,7 +186,7 @@ export const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({ message, messa
             <div className={isMe ? mergeClasses(classes.item, classes.me) : classes.item}>
                 <div className={classes.header}>
                     {!isMe && <Text weight="semibold">{fullName}</Text>}
-                    <Text className={classes.time}>{timestampToDateString(message.timestamp, true)}</Text>
+                    <Text className={classes.time}>{timestampToDateString(message.timestamp, true)} - {conversations[selectedId].botPath}</Text>
                     {isBot && <PromptDialog message={message} />}
                     {isBot && message.prompt && (
                         <Tooltip content={messagedCopied ? 'Copied' : 'Copy text'} relationship="label">

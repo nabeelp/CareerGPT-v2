@@ -25,7 +25,7 @@ import { FileUploader } from '../../FileUploader';
 import { Dismiss20, Filter20 } from '../../shared/BundledIcons';
 import { isToday } from '../../utils/TextUtils';
 import { NewBotMenu } from './bot-menu/NewBotMenu';
-import { SimplifiedNewBotMenu } from './bot-menu/SimplifiedNewBotMenu';
+import { NewBotDialog } from './bot-menu/NewBotDialog';
 import { ChatListSection } from './ChatListSection';
 
 const useClasses = makeStyles({
@@ -181,7 +181,7 @@ export const ChatList: FC = () => {
         <div className={classes.root}>
             <div className={classes.header}>
                 {features[FeatureKeys.SimplifiedExperience].enabled ? (
-                    <SimplifiedNewBotMenu onFileUpload={() => fileUploaderRef.current?.click()} />
+                    <NewBotDialog />
                 ) : (
                     <>
                         {!isFiltering && (

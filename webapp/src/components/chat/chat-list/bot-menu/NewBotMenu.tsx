@@ -24,7 +24,7 @@ export const NewBotMenu: FC<NewBotMenuProps> = ({ onFileUpload }) => {
     const [isJoiningBot, setIsJoiningBot] = useState(false);
 
     const onAddChat = () => {
-        void chat.createChat();
+        void chat.createChat('careerPlan');
     };
     const onJoinClick = () => {
         setIsJoiningBot(true);
