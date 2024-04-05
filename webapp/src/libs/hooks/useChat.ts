@@ -29,11 +29,10 @@ import { ChatService } from '../services/ChatService';
 import { DocumentImportService } from '../services/DocumentImportService';
 
 // CUSTOM: Change the bot icons here for the different scenarios, or override the icons files listed below
-import botIcon1 from '../../assets/bot-icons/bot-icon-1.png';
-import botIcon2 from '../../assets/bot-icons/bot-icon-2.png';
-import botIcon3 from '../../assets/bot-icons/bot-icon-3.png';
-import botIcon4 from '../../assets/bot-icons/bot-icon-4.png';
-import botIcon5 from '../../assets/bot-icons/bot-icon-5.png';
+import botIconCareerPlan from '../../assets/bot-icons/bot-icon-careerplan.png';
+import botIconFindRole from '../../assets/bot-icons/bot-icon-findrole.png';
+import botIconAssessStrengths from '../../assets/bot-icons/bot-icon-assessstrengths.png';
+import botIconForgeBrand from '../../assets/bot-icons/bot-icon-forgebrand.png';
 import { getErrorDetails } from '../../components/utils/TextUtils';
 import { FeatureKeys } from '../../redux/features/app/AppState';
 import { PlanState } from '../models/Plan';
@@ -56,9 +55,6 @@ export const useChat = () => {
     const botService = new ChatArchiveService();
     const chatService = new ChatService();
     const documentImportService = new DocumentImportService();
-
-    // CUSTOM: Change the number of bot icons here, by adding or removing the bot icon files
-    const botProfilePictures: string[] = [botIcon1, botIcon2, botIcon3, botIcon4, botIcon5];
 
     const userId = activeUserInfo?.id ?? '';
     const fullName = activeUserInfo?.username ?? '';
@@ -93,7 +89,7 @@ export const useChat = () => {
                         messages: [result.initialBotMessage],
                         enabledHostedPlugins: result.chatSession.enabledPlugins,
                         users: [loggedInUser],
-                        botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                        botProfilePicture: getBotProfilePicture(botPath),
                         input: '',
                         botResponseStatus: undefined,
                         userDataLoaded: false,
@@ -191,7 +187,7 @@ export const useChat = () => {
                         users: chatUsers,
                         messages: chatMessages,
                         enabledHostedPlugins: chatSession.enabledPlugins,
-                        botProfilePicture: getBotProfilePicture(Object.keys(loadedConversations).length),
+                        botProfilePicture: getBotProfilePicture(chatSession.botPath),
                         input: '',
                         botResponseStatus: undefined,
                         userDataLoaded: false,
@@ -249,7 +245,7 @@ export const useChat = () => {
                     users: [loggedInUser],
                     messages: chatMessages,
                     enabledHostedPlugins: chatSession.enabledPlugins,
-                    botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                    botProfilePicture: getBotProfilePicture(chatSession.botPath),
                     input: '',
                     botResponseStatus: undefined,
                     userDataLoaded: false,
@@ -266,8 +262,21 @@ export const useChat = () => {
         }
     };
 
-    const getBotProfilePicture = (index: number): string => {
-        return botProfilePictures[index % botProfilePictures.length];
+    const getBotProfilePicture = (botPath: string): string => {
+        // check the value of botPath and return the appropriate botIcon
+        switch (botPath) {
+            case 'careerPlan':
+                return botIconCareerPlan;
+            case 'findRole':
+                return botIconFindRole;
+            case 'assessStrengths':
+                return botIconAssessStrengths;
+            case 'forgeBrand':
+                return botIconForgeBrand;
+            default:
+                return botIconCareerPlan;
+        }
+
     };
 
     const getChatMemorySources = async (chatId: string) => {
@@ -356,7 +365,7 @@ export const useChat = () => {
                     messages: chatMessages,
                     enabledHostedPlugins: result.enabledPlugins,
                     users: chatUsers,
-                    botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                    botProfilePicture: getBotProfilePicture(result.botPath),
                     input: '',
                     botResponseStatus: undefined,
                     userDataLoaded: false,

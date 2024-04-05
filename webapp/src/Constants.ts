@@ -1,4 +1,5 @@
-import botIcon1 from './assets/bot-icons/bot-icon-1.png';
+// CUSTOM: If changing images,be sure to change this image as well
+import botIconCareerPlan from './assets/bot-icons/bot-icon-careerplan.png';
 
 export const Constants = {
     app: {
@@ -22,7 +23,7 @@ export const Constants = {
             id: 'bot',
             fullName: 'CareerGPT',
             emailAddress: '',
-            photo: botIcon1,
+            photo: botIconCareerPlan,
         },
         fileExtension: 'skcb',
         typingIndicatorTimeoutMs: 5000,
