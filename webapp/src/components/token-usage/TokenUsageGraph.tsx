@@ -20,7 +20,7 @@ import {
 } from '../../libs/models/TokenUsage';
 import { useAppSelector } from '../../redux/app/hooks';
 import { RootState } from '../../redux/app/store';
-import { companyBrandRamp } from '../../styles';
+import { defaultPallette } from '../../styles';
 import { TypingIndicator } from '../chat/typing-indicator/TypingIndicator';
 import { Info16 } from '../shared/BundledIcons';
 import { TokenUsageBar } from './TokenUsageBar';
@@ -76,7 +76,7 @@ export const TokenUsageGraph: React.FC<ITokenUsageGraph> = ({ promptView, tokenU
 
     const graphColors = {
         brand: {
-            // Color index of companyBrandRamp array defined in styles.ts
+            // Color index of defaultPallette array defined in styles.ts
             legend: 120 as Brands,
             index: 120 as Brands,
             getNextIndex: () => {
@@ -99,7 +99,7 @@ export const TokenUsageGraph: React.FC<ITokenUsageGraph> = ({ promptView, tokenU
             const viewDetails: TokenUsageViewDetails = {
                 usageCount: value,
                 legendLabel: TokenUsageFunctionNameMap[key],
-                color: companyBrandRamp[graphColors.brand.index],
+                color: defaultPallette[graphColors.brand.index],
             };
 
             if (key.toLocaleUpperCase().includes('MEMORY')) {
@@ -162,7 +162,7 @@ export const TokenUsageGraph: React.FC<ITokenUsageGraph> = ({ promptView, tokenU
                                         name={'Response Generation'}
                                         usageCount={responseGenerationUsage}
                                         items={Object.values(responseGenerationView)}
-                                        color={companyBrandRamp[graphColors.brand.legend]}
+                                        color={defaultPallette[graphColors.brand.legend]}
                                     />
                                     <TokenUsageLegendItem
                                         key={'Memory Generation'}

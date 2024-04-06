@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from './redux/app/hooks';
 import { RootState } from './redux/app/store';
 import { FeatureKeys } from './redux/features/app/AppState';
 import { setActiveUserInfo, setServiceInfo } from './redux/features/app/appSlice';
-import { semanticKernelDarkTheme, semanticKernelLightTheme } from './styles';
+import { getPathTheme, headerBackgroundColor, headerTextColor } from './styles';
 
 export const useClasses = makeStyles({
     container: {
@@ -27,8 +27,8 @@ export const useClasses = makeStyles({
     },
     header: {
         alignItems: 'center',
-        backgroundColor: tokens.colorBrandForeground2,
-        color: tokens.colorNeutralForegroundOnBrand,
+        backgroundColor: headerBackgroundColor,
+        color: headerTextColor,
         display: 'flex',
         height: '48px',
         justifyContent: 'space-between',
@@ -122,10 +122,13 @@ const App = () => {
     }, [instance, inProgress, isAuthenticated, appState, isMaintenance]);
 
     const content = <Chat classes={classes} appState={appState} setAppState={setAppState} />;
+
+    const { conversations, selectedId } = useAppSelector((state: RootState) => state.conversations);
+
     return (
         <FluentProvider
             className="app-container"
-            theme={features[FeatureKeys.DarkMode].enabled ? semanticKernelDarkTheme : semanticKernelLightTheme}
+            theme={getPathTheme(selectedId == '' ? 'careerPlan' : conversations[selectedId].botPath, features[FeatureKeys.DarkMode].enabled)}
         >
             {AuthHelper.isAuthAAD() ? (
                 <>

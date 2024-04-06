@@ -79,7 +79,7 @@ export const useChat = () => {
         const chatTitle = `CareerGPT @ ${new Date().toLocaleString()}`;
         try {
             await chatService
-                .createChatAsync(chatTitle, await AuthHelper.getSKaaSAccessToken(instance, inProgress))
+                .createChatAsync(chatTitle, botPath, await AuthHelper.getSKaaSAccessToken(instance, inProgress))
                 .then((result: ICreateChatSessionResponse) => {
                     const newChat: ChatState = {
                         id: result.chatSession.id,

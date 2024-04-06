@@ -88,13 +88,13 @@ public class ChatHistoryController : ControllerBase
     public async Task<IActionResult> CreateChatSessionAsync(
         [FromBody] CreateChatParameters chatParameters)
     {
-        if (chatParameters.Title == null)
+        if (chatParameters.Title == null || chatParameters.BotPath == null)
         {
             return this.BadRequest("Chat session parameters cannot be null.");
         }
 
         // Create a new chat session
-        var newChat = new ChatSession(chatParameters.Title, this._promptOptions.SystemDescription);
+        var newChat = new ChatSession(chatParameters.Title, this._promptOptions.SystemDescription, chatParameters.BotPath);
         await this._sessionRepository.CreateAsync(newChat);
 
         // Create initial bot message
@@ -216,6 +216,7 @@ public class ChatHistoryController : ControllerBase
             chat!.Title = chatParameters.Title ?? chat!.Title;
             chat!.SystemDescription = chatParameters.SystemDescription ?? chat!.SafeSystemDescription;
             chat!.MemoryBalance = chatParameters.MemoryBalance ?? chat!.MemoryBalance;
+            chat!.BotPath = chatParameters.BotPath ?? chat!.BotPath;
             await this._sessionRepository.UpsertAsync(chat);
             await messageRelayHubContext.Clients.Group(chatId.ToString()).SendAsync(ChatEditedClientCall, chat);
 

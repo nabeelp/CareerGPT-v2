@@ -65,7 +65,7 @@ const useClasses = makeStyles({
         ...shorthands.padding(customTokens.spacingVerticalXS, customTokens.spacingHorizontalS),
     },
     me: {
-        backgroundColor: customTokens.colorMeBackground,
+        backgroundColor: customTokens.colorNeutralBackground2,
         width: '100%',
     },
     time: {
@@ -139,8 +139,8 @@ export const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({ message, messa
     const avatar: AvatarProps = isBot
         ? { image: { src: conversations[selectedId].botProfilePicture } }
         : isDefaultUser
-          ? { idForColor: selectedId, color: 'colorful' }
-          : { name: fullName, color: 'colorful' };
+          ? { idForColor: fullName, color: 'colorful' }
+          : { name: fullName, idForColor: fullName, color: 'colorful' };
 
     let content: JSX.Element;
     if (isBot && message.type === ChatMessageType.Plan) {
@@ -186,7 +186,7 @@ export const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({ message, messa
             <div className={isMe ? mergeClasses(classes.item, classes.me) : classes.item}>
                 <div className={classes.header}>
                     {!isMe && <Text weight="semibold">{fullName}</Text>}
-                    <Text className={classes.time}>{timestampToDateString(message.timestamp, true)} - {conversations[selectedId].botPath}</Text>
+                    <Text className={classes.time}>{timestampToDateString(message.timestamp, true)}</Text>
                     {isBot && <PromptDialog message={message} />}
                     {isBot && message.prompt && (
                         <Tooltip content={messagedCopied ? 'Copied' : 'Copy text'} relationship="label">
