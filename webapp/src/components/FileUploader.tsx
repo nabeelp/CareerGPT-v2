@@ -10,7 +10,7 @@ const useClasses = makeStyles({
 interface FileUploaderProps {
     acceptedExtensions: string[] | undefined;
     onSelectedFile: (file: File) => void;
-    ref?: React.Ref<HTMLInputElement> | string;
+    ref?: React.Ref<HTMLInputElement>;
 }
 
 export const FileUploader: React.FC<FileUploaderProps> = forwardRef<HTMLInputElement, FileUploaderProps>(
