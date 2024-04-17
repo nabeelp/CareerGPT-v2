@@ -55,6 +55,8 @@ public class PromptsOptions
     [Required, NotEmptyOrWhitespace] public string SystemDescription { get; set; } = string.Empty;
     [Required, NotEmptyOrWhitespace] public string SystemResponse { get; set; } = string.Empty;
 
+    // TODO: Change this so that the SystemDescription and IntiialBotMessage above come from a DB call, using the botPath as a query parameter
+    // The initial message could also be derived from the LLM rather than being a setting?
     [Required, NotEmptyOrWhitespace] public string CareerPlannerSystemDescription { get; set; } = string.Empty;
     [Required, NotEmptyOrWhitespace] public string CareerPlannerInitialBotMessage { get; set; } = string.Empty;
     [Required, NotEmptyOrWhitespace] public string RoleFinderSystemDescription { get; set; } = string.Empty;
