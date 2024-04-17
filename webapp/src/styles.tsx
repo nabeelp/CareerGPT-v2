@@ -14,6 +14,10 @@ import {
 export const headerBackgroundColor = "#235e7d"; //tokens.colorBrandForeground2;
 export const headerTextColor = "#ffffff"; // tokens.colorNeutralForegroundOnBrand;
 export const userAvatarColor = "#235e7d"; // customTokens.colorNeutralBackground2;
+export const careerPlanKeyColor = "#e77037";
+export const findRoleKeyColor = "#24a0d7";
+export const assessStrengthsKeyColor = "#a33a96";
+export const forgeBrandKeyColor = "#52a836";
 
 // CUSTOM: use https://react.fluentui.dev/?path=/docs/theme-theme-designer--page to create your brand variant (or pallette) and copy the values for 10-160 below
 // Default and careerPlan pallette - Key color: #e77037
