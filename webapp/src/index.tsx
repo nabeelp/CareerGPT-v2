@@ -18,7 +18,7 @@ if (!localStorage.getItem('debug')) {
 
 let container: HTMLElement | null = null;
 let root: ReactDOM.Root | undefined = undefined;
-let msalInstance: PublicClientApplication | undefined;
+let msalInstance: PublicClientApplication;
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!container) {
@@ -35,43 +35,31 @@ document.addEventListener('DOMContentLoaded', () => {
 export function renderApp() {
     fetch(new URL('authConfig', BackendServiceUrl))
         .then((response) => (response.ok ? (response.json() as Promise<AuthConfig>) : Promise.reject()))
-        .then(async (authConfig) => {
+        .then(async (authConfig: AuthConfig) => {
             store.dispatch(setAuthConfig(authConfig));
 
             if (AuthHelper.isAuthAAD()) {
-                if (!msalInstance) {
-                    msalInstance = new PublicClientApplication(AuthHelper.getMsalConfig(authConfig));
-                    debugger;
-                    await msalInstance.initialize();
-                    await msalInstance
-                        .handleRedirectPromise()
-                        .then((response) => {
-                            if (response) {
-                                msalInstance?.setActiveAccount(response.account);
-                            } else {
-                                const activeAccount = msalInstance?.getAllAccounts()[0];
-                                if (activeAccount) {
-                                    msalInstance?.setActiveAccount(activeAccount);
-                                }
-                            }
-                        })
-                        .catch((e) => {
-                            console.log('handleRedirectPromise: ', e);
-                        });
-                }
+                msalInstance = new PublicClientApplication(AuthHelper.getMsalConfig(authConfig));
+                await msalInstance.initialize();
 
-                // render with the MsalProvider if AAD is enabled
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                root!.render(
-                    <React.StrictMode>
-                        <ReduxProvider store={store}>
-                            <MsalProvider instance={msalInstance}>
-                                <App />
-                            </MsalProvider>
-                        </ReduxProvider>
-                    </React.StrictMode>,
-                );
+                void msalInstance.handleRedirectPromise().then((response) => {
+                    if (response) {
+                        msalInstance.setActiveAccount(response.account);
+                    }
+                });
             }
+
+            // render with the MsalProvider if AAD is enabled
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            root!.render(
+                <React.StrictMode>
+                    <ReduxProvider store={store}>
+                        <MsalProvider instance={msalInstance}>
+                            <App />
+                        </MsalProvider>
+                    </ReduxProvider>
+                </React.StrictMode>,
+            );
         })
         .catch(() => {
             store.dispatch(setAuthConfig(undefined));
