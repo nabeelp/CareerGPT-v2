@@ -5,7 +5,7 @@ import { Body1, Spinner, Title3 } from '@fluentui/react-components';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { renderApp } from '../../index';
 import { AuthHelper } from '../../libs/auth/AuthHelper';
-import { BackendServiceUrl, NetworkErrorMessage } from '../../libs/services/BaseService';
+import { NetworkErrorMessage } from '../../libs/services/BaseService';
 import { MaintenanceService, MaintenanceStatus } from '../../libs/services/MaintenanceService';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { RootState } from '../../redux/app/store';
