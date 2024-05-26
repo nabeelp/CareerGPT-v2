@@ -117,7 +117,8 @@ export const Settings = [
     {
         // Basic settings has to stay at the first index. Add all new settings to end of array.
         title: 'Basic',
-        features: [FeatureKeys.DarkMode, FeatureKeys.PluginsPlannersAndPersonas],
+        // features: [FeatureKeys.DarkMode, FeatureKeys.PluginsPlannersAndPersonas],
+        features: [FeatureKeys.DarkMode],
         stackVertically: true,
     },
     {
