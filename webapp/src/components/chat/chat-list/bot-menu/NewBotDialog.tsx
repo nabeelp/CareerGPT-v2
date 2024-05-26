@@ -23,6 +23,9 @@ import botIconFindRole from '../../../../assets/bot-icons/bot-icon-findrole.png'
 import botIconAssessStrengths from '../../../../assets/bot-icons/bot-icon-assessstrengths.png';
 import botIconForgeBrand from '../../../../assets/bot-icons/bot-icon-forgebrand.png';
 import { headerBackgroundColor, customTokens, careerPlanKeyColor, findRoleKeyColor, assessStrengthsKeyColor, forgeBrandKeyColor } from '../../../../styles'
+import { useAppDispatch, useAppSelector } from '../../../../redux/app/hooks';
+import { RootState } from '../../../../redux/app/store';
+import { setShowNewDialog } from '../../../../redux/features/conversations/conversationsSlice';
 
 const useClasses = makeStyles({
     root: {
@@ -107,6 +110,8 @@ const useClasses = makeStyles({
 export const NewBotDialog: FC = () => {
     const classes = useClasses();
     const chat = useChat();
+    const displayNewChatDialog = useAppSelector((state: RootState) => state.conversations.showNewDialog);
+    const dispatch = useAppDispatch();
 
     const onStartCareerPlan = () => {
         void chat.createChat('careerPlan');
@@ -156,7 +161,7 @@ export const NewBotDialog: FC = () => {
     ];
 
     return (
-        <Dialog modalType="alert">
+        <Dialog modalType="alert" open={displayNewChatDialog} onOpenChange={(_event, data) => { dispatch(setShowNewDialog(data.open)); }}>
             <DialogTrigger>
                 <Tooltip content={'New chat session'} relationship="label">
                     <Button icon={<Add20 />} appearance="transparent" aria-label="Edit" />

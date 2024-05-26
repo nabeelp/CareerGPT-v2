@@ -51,6 +51,9 @@ export const conversationsSlice = createSlice({
         setSelectedConversation: (state: ConversationsState, action: PayloadAction<string>) => {
             state.selectedId = action.payload;
         },
+        setShowNewDialog: (state: ConversationsState, action: PayloadAction<boolean>) => {
+            state.showNewDialog = action.payload;
+        },
         toggleMultiUserConversations: (state: ConversationsState) => {
             const keys = Object.keys(state.conversations);
             keys.forEach((key) => {
@@ -235,6 +238,7 @@ export const {
     editConversationSystemDescription,
     editConversationMemoryBalance,
     setSelectedConversation,
+    setShowNewDialog,
     toggleMultiUserConversations,
     addConversation,
     setImportingDocumentsToConversation,

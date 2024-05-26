@@ -13,6 +13,7 @@ import {
     deleteConversation,
     setConversations,
     setSelectedConversation,
+    setShowNewDialog,
     updateBotResponseStatus,
 } from '../../redux/features/conversations/conversationsSlice';
 import { Plugin } from '../../redux/features/plugins/PluginsState';
@@ -202,14 +203,14 @@ export const useChat = () => {
                 // If there are no non-hidden chats, create a new chat
                 const nonHiddenChats = Object.values(loadedConversations).filter((c) => !c.hidden);
                 if (nonHiddenChats.length === 0) {
-                    await createChat('careerPlan');
+                    dispatch(setShowNewDialog(true));
                 } else {
                     dispatch(setSelectedConversation(nonHiddenChats[0].id));
                 }
             } else {
                 // No chats exist, create first chat window
-                await createChat('careerPlan');
-            }
+                dispatch(setShowNewDialog(true));
+        }
 
             return true;
         } catch (e: any) {
@@ -420,7 +421,7 @@ export const useChat = () => {
 
                 if (Object.values(conversations).filter((c) => !c.hidden && c.id !== chatId).length === 0) {
                     // If there are no non-hidden chats, create a new chat
-                    void createChat('careerPlan');
+                    dispatch(setShowNewDialog(true));
                 }
             })
             .catch((e: any) => {
