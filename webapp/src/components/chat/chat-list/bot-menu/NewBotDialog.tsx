@@ -34,7 +34,7 @@ const useClasses = makeStyles({
         flexWrap: 'nowrap',
         width: '700px',
         maxWidth: '700px',
-        height: '490px',
+        height: '430px',
         boxSizing: 'border-box',
         '> *': {
             textOverflow: 'ellipsis',
@@ -86,7 +86,7 @@ const useClasses = makeStyles({
         lineHeight: customTokens.lineHeightBase100,
         paddingLeft: "5px",
         paddingRight: "5px",
-        height: "180px",
+        height: "120px",
     },
     cardButton: {
         verticalAlign: "bottom",
@@ -132,28 +132,28 @@ export const NewBotDialog: FC = () => {
     const cardsInfo = [
         {
             title: 'Build my career plan',
-            description: 'Interact with your career mentor bot who will recommend roles for you based on your skills and will then help you create a career development plan in the form of a report, including a gap analysis and learning plan to help you get started.',
+            description: 'Discover roles that match your skills and create a personalized career development plan, which will include a skills gap analysis and a learning plan.',
             icon: botIconCareerPlan,
             buttonClass: classes.careerPlanButton,
             action: onStartCareerPlan,
         },
         {
             title: 'Find my next role',
-            description: 'Interact with your career mentor bot who will help you decide on possible future roles for your career, based on your current skills. Recommended roles will then be presented to you with a matrix representing where your skills align with the recommended roles.',
+            description: 'Explore potential future roles based on your current skills and receive a matrix showing how your skills align with these roles.',
             icon: botIconFindRole,
             buttonClass: classes.findRoleButton,
             action: onStartFindRole,
         },
         {
             title: 'Assess my strengths',
-            description: 'Interact with your career mentor bot who will help identify your strengths, weaknesses, skills and real interests. Your mentor will then summarise these and provide you with guidance on how they can be improved and will also suggest some roles that may suit you.',
+            description: 'Identify your strengths, weaknesses, skills, and interests, and receive guidance on areas for development along with role suggestions that may suit you.', 
             icon: botIconAssessStrengths,
             buttonClass: classes.assessStrengthsButton,
             action: onStartAssessStrengths,
         },
         {
             title: 'Forge my brand',
-            description: 'Interact with a career mentor who will help you to create strong personal brand, by conducting a brand mentoring session with you. You will end the session with a strong personal brand statement reflecting your unique qualities, professional strengths, core values, and impact.',
+            description: 'Develop a strong personal brand by defining a statement that reflects your unique qualities, professional strengths, core values, and impact.',
             icon: botIconForgeBrand,
             buttonClass: classes.forgeBrandButton,
             action: onStartForgeBrand,
