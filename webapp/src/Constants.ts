@@ -3,7 +3,7 @@ import botIconCareerPlan from './assets/bot-icons/bot-icon-careerplan.png';
 
 export const Constants = {
     app: {
-        name: 'CareerGPT',
+        name: 'CareerCopilot',
         updateCheckIntervalSeconds: 60 * 5,
         CONNECTION_ALERT_ID: 'connection-alert',
         importTypes: '.txt,.pdf,.docx,.md,.jpg,.jpeg,.png,.tif,.tiff,.bmp,.gif',
@@ -21,7 +21,7 @@ export const Constants = {
     bot: {
         profile: {
             id: 'bot',
-            fullName: 'CareerGPT',
+            fullName: 'CareerCopilot',
             emailAddress: '',
             photo: botIconCareerPlan,
         },

@@ -18,7 +18,7 @@ Summary: Tests for the following behaviour from the WebApp:
 - Page has correct title
 - Start New Chat
 - Send a message to the bot, and expect a response
-- Chat History has the correct number of messages and that the last message is from CareerGPT
+- Chat History has the correct number of messages and that the last message is from CareerCopilot
 - SK core function testing for jokes and fun facts
 */
 export async function basicBotResponses(page) {
@@ -35,7 +35,7 @@ export async function basicBotResponses(page) {
     await expect((await chatHistoryItems.all()).length).toBe(5);
 
     // Expect the last message to be the bot's response.
-    await expect(chatHistoryItems.last()).toHaveAttribute('data-username', 'CareerGPT');
+    await expect(chatHistoryItems.last()).toHaveAttribute('data-username', 'CareerCopilot');
 
     await util.postUnitTest(page);
 }
@@ -47,7 +47,7 @@ export async function chatTitleChange(page) {
     await util.loginAndCreateNewChat(page);
 
     await page.getByTestId('editChatTitleButtonSimplified').click();
-    await page.locator('input[type="text"]').fill('CareerGPT Unit Tests');
+    await page.locator('input[type="text"]').fill('CareerCopilot Unit Tests');
     await page.locator('input[type="text"]').press('Enter');
 
     await util.postUnitTest(page);
