@@ -13,6 +13,7 @@ import {
     deleteConversation,
     setConversations,
     setSelectedConversation,
+    setShowNewDialog,
     updateBotResponseStatus,
 } from '../../redux/features/conversations/conversationsSlice';
 import { Plugin } from '../../redux/features/plugins/PluginsState';
@@ -28,11 +29,11 @@ import { ChatArchiveService } from '../services/ChatArchiveService';
 import { ChatService } from '../services/ChatService';
 import { DocumentImportService } from '../services/DocumentImportService';
 
-import botIcon1 from '../../assets/bot-icons/bot-icon-1.png';
-import botIcon2 from '../../assets/bot-icons/bot-icon-2.png';
-import botIcon3 from '../../assets/bot-icons/bot-icon-3.png';
-import botIcon4 from '../../assets/bot-icons/bot-icon-4.png';
-import botIcon5 from '../../assets/bot-icons/bot-icon-5.png';
+// CUSTOM: Change the bot icons here for the different scenarios, or override the icons files listed below
+import botIconCareerPlan from '../../assets/bot-icons/bot-icon-careerplan.png';
+import botIconFindRole from '../../assets/bot-icons/bot-icon-findrole.png';
+import botIconAssessStrengths from '../../assets/bot-icons/bot-icon-assessstrengths.png';
+import botIconForgeBrand from '../../assets/bot-icons/bot-icon-forgebrand.png';
 import { getErrorDetails } from '../../components/utils/TextUtils';
 import { FeatureKeys } from '../../redux/features/app/AppState';
 import { PlanState } from '../models/Plan';
@@ -56,8 +57,6 @@ export const useChat = () => {
     const chatService = new ChatService();
     const documentImportService = new DocumentImportService();
 
-    const botProfilePictures: string[] = [botIcon1, botIcon2, botIcon3, botIcon4, botIcon5];
-
     const userId = activeUserInfo?.id ?? '';
     const fullName = activeUserInfo?.username ?? '';
     const emailAddress = activeUserInfo?.email ?? '';
@@ -77,11 +76,11 @@ export const useChat = () => {
         return users.find((user) => user.id === id);
     };
 
-    const createChat = async () => {
-        const chatTitle = `Copilot @ ${new Date().toLocaleString()}`;
+    const createChat = async (botPath: string) => {
+        const chatTitle = `CareerCopilot @ ${new Date().toLocaleString()}`;
         try {
             await chatService
-                .createChatAsync(chatTitle, await AuthHelper.getSKaaSAccessToken(instance, inProgress))
+                .createChatAsync(chatTitle, botPath, await AuthHelper.getSKaaSAccessToken(instance, inProgress))
                 .then((result: ICreateChatSessionResponse) => {
                     const newChat: ChatState = {
                         id: result.chatSession.id,
@@ -91,12 +90,13 @@ export const useChat = () => {
                         messages: [result.initialBotMessage],
                         enabledHostedPlugins: result.chatSession.enabledPlugins,
                         users: [loggedInUser],
-                        botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                        botProfilePicture: getBotProfilePicture(botPath),
                         input: '',
                         botResponseStatus: undefined,
                         userDataLoaded: false,
                         disabled: false,
                         hidden: false,
+                        botPath: botPath,
                     };
 
                     dispatch(addConversation(newChat));
@@ -188,12 +188,13 @@ export const useChat = () => {
                         users: chatUsers,
                         messages: chatMessages,
                         enabledHostedPlugins: chatSession.enabledPlugins,
-                        botProfilePicture: getBotProfilePicture(Object.keys(loadedConversations).length),
+                        botProfilePicture: getBotProfilePicture(chatSession.botPath),
                         input: '',
                         botResponseStatus: undefined,
                         userDataLoaded: false,
                         disabled: false,
                         hidden: !features[FeatureKeys.MultiUserChat].enabled && chatUsers.length > 1,
+                        botPath: chatSession.botPath,
                     };
                 }
 
@@ -202,14 +203,14 @@ export const useChat = () => {
                 // If there are no non-hidden chats, create a new chat
                 const nonHiddenChats = Object.values(loadedConversations).filter((c) => !c.hidden);
                 if (nonHiddenChats.length === 0) {
-                    await createChat();
+                    dispatch(setShowNewDialog(true));
                 } else {
                     dispatch(setSelectedConversation(nonHiddenChats[0].id));
                 }
             } else {
                 // No chats exist, create first chat window
-                await createChat();
-            }
+                dispatch(setShowNewDialog(true));
+        }
 
             return true;
         } catch (e: any) {
@@ -245,12 +246,13 @@ export const useChat = () => {
                     users: [loggedInUser],
                     messages: chatMessages,
                     enabledHostedPlugins: chatSession.enabledPlugins,
-                    botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                    botProfilePicture: getBotProfilePicture(chatSession.botPath),
                     input: '',
                     botResponseStatus: undefined,
                     userDataLoaded: false,
                     disabled: false,
                     hidden: false,
+                    botPath: chatSession.botPath,
                 };
 
                 dispatch(addConversation(newChat));
@@ -261,8 +263,21 @@ export const useChat = () => {
         }
     };
 
-    const getBotProfilePicture = (index: number): string => {
-        return botProfilePictures[index % botProfilePictures.length];
+    const getBotProfilePicture = (botPath: string): string => {
+        // check the value of botPath and return the appropriate botIcon
+        switch (botPath) {
+            case 'careerPlan':
+                return botIconCareerPlan;
+            case 'findRole':
+                return botIconFindRole;
+            case 'assessStrengths':
+                return botIconAssessStrengths;
+            case 'forgeBrand':
+                return botIconForgeBrand;
+            default:
+                return botIconCareerPlan;
+        }
+
     };
 
     const getChatMemorySources = async (chatId: string) => {
@@ -351,12 +366,13 @@ export const useChat = () => {
                     messages: chatMessages,
                     enabledHostedPlugins: result.enabledPlugins,
                     users: chatUsers,
-                    botProfilePicture: getBotProfilePicture(Object.keys(conversations).length),
+                    botProfilePicture: getBotProfilePicture(result.botPath),
                     input: '',
                     botResponseStatus: undefined,
                     userDataLoaded: false,
                     disabled: false,
                     hidden: false,
+                    botPath: result.botPath,
                 };
 
                 dispatch(addConversation(newChat));
@@ -369,7 +385,7 @@ export const useChat = () => {
         return { success: true, message: '' };
     };
 
-    const editChat = async (chatId: string, title: string, syetemDescription: string, memoryBalance: number) => {
+    const editChat = async (chatId: string, title: string, syetemDescription: string, memoryBalance: number, botPath: string) => {
         try {
             await chatService.editChatAsync(
                 chatId,
@@ -377,6 +393,7 @@ export const useChat = () => {
                 syetemDescription,
                 memoryBalance,
                 await AuthHelper.getSKaaSAccessToken(instance, inProgress),
+                botPath,
             );
         } catch (e: any) {
             const errorMessage = `Error editing chat ${chatId}. Details: ${getErrorDetails(e)}`;
@@ -404,7 +421,7 @@ export const useChat = () => {
 
                 if (Object.values(conversations).filter((c) => !c.hidden && c.id !== chatId).length === 0) {
                     // If there are no non-hidden chats, create a new chat
-                    void createChat();
+                    dispatch(setShowNewDialog(true));
                 }
             })
             .catch((e: any) => {
@@ -470,15 +487,15 @@ export const useChat = () => {
 export function getFriendlyChatName(convo: ChatState): string {
     const messages = convo.messages;
 
-    // Regex to match the Copilot timestamp format that is used as the default chat name.
-    // The format is: 'Copilot @ MM/DD/YYYY, hh:mm:ss AM/PM'.
+    // Regex to match the CareerCopilot timestamp format that is used as the default chat name.
+    // The format is: 'CareerCopilot @ MM/DD/YYYY, hh:mm:ss AM/PM'.
     const autoGeneratedTitleRegex =
-        /Copilot @ [0-9]{1,2}\/[0-9]{1,2}\/[0-9]{1,4}, [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2} [A,P]M/;
+        /CareerCopilot @ [0-9]{1,2}\/[0-9]{1,2}\/[0-9]{1,4}, [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2} [A,P]M/;
     const firstUserMessage = messages.find(
         (message) => message.authorRole !== AuthorRoles.Bot && message.type === ChatMessageType.Message,
     );
 
-    // If the chat title is the default Copilot timestamp, use the first user message as the title.
+    // If the chat title is the default CareerCopilot timestamp, use the first user message as the title.
     // If no user messages exist, use 'New Chat' as the title.
     const friendlyTitle = autoGeneratedTitleRegex.test(convo.title)
         ? firstUserMessage?.content ?? 'New Chat'

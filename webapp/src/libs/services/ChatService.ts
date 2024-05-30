@@ -13,9 +13,10 @@ import { ICustomPlugin } from '../semantic-kernel/model/CustomPlugin';
 import { BaseService } from './BaseService';
 
 export class ChatService extends BaseService {
-    public createChatAsync = async (title: string, accessToken: string): Promise<ICreateChatSessionResponse> => {
+    public createChatAsync = async (title: string, botPath: string, accessToken: string): Promise<ICreateChatSessionResponse> => {
         const body = {
             title,
+            botPath,
         };
 
         const result = await this.getResponseAsync<ICreateChatSessionResponse>(
@@ -78,6 +79,7 @@ export class ChatService extends BaseService {
         systemDescription: string,
         memoryBalance: number,
         accessToken: string,
+        botPath: string,
     ): Promise<any> => {
         const body: IChatSession = {
             id: chatId,
@@ -85,6 +87,7 @@ export class ChatService extends BaseService {
             systemDescription,
             memoryBalance,
             enabledPlugins: [], // edit will not modify the enabled plugins
+            botPath
         };
 
         const result = await this.getResponseAsync<IChatSession>(

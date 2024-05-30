@@ -5,7 +5,7 @@ import { Body1, Spinner, Title3 } from '@fluentui/react-components';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { renderApp } from '../../index';
 import { AuthHelper } from '../../libs/auth/AuthHelper';
-import { BackendServiceUrl, NetworkErrorMessage } from '../../libs/services/BaseService';
+import { NetworkErrorMessage } from '../../libs/services/BaseService';
 import { MaintenanceService, MaintenanceStatus } from '../../libs/services/MaintenanceService';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { RootState } from '../../redux/app/store';
@@ -86,7 +86,7 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
                 <div className={classes.informativeView}>
                     <Title3>Connecting...</Title3>
                     <Spinner />
-                    <Body1>
+                    {/* <Body1>
                         This app expects to find a server running at <strong>{BackendServiceUrl}</strong>
                     </Body1>
                     <Body1>
@@ -101,7 +101,7 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
                             <b>REACT_APP_BACKEND_URI</b>
                         </code>{' '}
                         variable set in your <b>webapp/.env</b> file
-                    </Body1>
+                    </Body1> */}
                 </div>
             )}
         </>

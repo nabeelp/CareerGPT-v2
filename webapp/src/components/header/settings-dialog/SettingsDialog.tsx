@@ -79,7 +79,7 @@ export const SettingsDialog: React.FC<ISettingsDialogProps> = ({ open, closeDial
                                     <SettingSection key={settings[0].title} setting={settings[0]} contentOnly />
                                 </AccordionPanel>
                             </AccordionItem>
-                            <Divider />
+                            {/* <Divider />
                             <AccordionItem value="advanced">
                                 <AccordionHeader expandIconPosition="end" data-testid="advancedSettingsFoldup">
                                     <h3>Advanced</h3>
@@ -92,7 +92,7 @@ export const SettingsDialog: React.FC<ISettingsDialogProps> = ({ open, closeDial
                                         return <SettingSection key={setting.title} setting={setting} />;
                                     })}
                                 </AccordionPanel>
-                            </AccordionItem>
+                            </AccordionItem> */}
                             <Divider />
                             <AccordionItem value="about">
                                 <AccordionHeader expandIconPosition="end">

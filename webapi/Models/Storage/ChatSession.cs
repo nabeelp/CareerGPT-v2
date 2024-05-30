@@ -52,6 +52,11 @@ public class ChatSession : IStorageEntity
     public HashSet<string> EnabledPlugins { get; set; } = new();
 
     /// <summary>
+    /// The path chosen for this bot conversation
+    /// </summary>
+    public string BotPath { get; set; }
+
+    /// <summary>
     /// Used to determine if the current chat requires upgrade.
     /// </summary>
     public string? Version { get; set; }
@@ -67,12 +72,13 @@ public class ChatSession : IStorageEntity
     /// </summary>
     /// <param name="title">The title of the chat.</param>
     /// <param name="systemDescription">The system description of the chat.</param>
-    public ChatSession(string title, string systemDescription)
+    public ChatSession(string title, string systemDescription, string botPath)
     {
         this.Id = Guid.NewGuid().ToString();
         this.Title = title;
         this.CreatedOn = DateTimeOffset.Now;
         this.SystemDescription = systemDescription;
         this.Version = CurrentVersion;
+        this.BotPath = botPath;
     }
 }

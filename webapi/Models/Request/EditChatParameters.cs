@@ -23,4 +23,9 @@ public class EditChatParameters
     /// the relevance threshold of long term memory and increasing the threshold score of working memory.
     /// </summary>
     public float? MemoryBalance { get; set; }
+
+    /// <summary>
+    /// The path chosen for this bot conversation
+    /// </summary>
+    public string? BotPath { get; set; }
 }

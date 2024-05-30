@@ -19,4 +19,5 @@ export interface ChatState {
     importingDocuments?: string[];
     disabled: boolean; // For labeling a chat has been deleted
     hidden: boolean; // For hiding a chat from the list
+    botPath: string;
 }

@@ -88,19 +88,45 @@ public class ChatHistoryController : ControllerBase
     public async Task<IActionResult> CreateChatSessionAsync(
         [FromBody] CreateChatParameters chatParameters)
     {
-        if (chatParameters.Title == null)
+        if (chatParameters.Title == null || chatParameters.BotPath == null)
         {
             return this.BadRequest("Chat session parameters cannot be null.");
         }
 
+        var initialMessage = string.Empty;
+        var systemDescription = string.Empty;
+        switch (chatParameters.BotPath)
+        {
+            case "careerPlan":
+                initialMessage = this._promptOptions.CareerPlannerInitialBotMessage;
+                systemDescription = this._promptOptions.CareerPlannerSystemDescription;
+                break;
+            case "findRole":
+                initialMessage = this._promptOptions.RoleFinderInitialBotMessage;
+                systemDescription = this._promptOptions.RoleFinderSystemDescription;
+                break;
+            case "assessStrengths":
+                initialMessage = this._promptOptions.StrengthAssessmentInitialBotMessage;
+                systemDescription = this._promptOptions.StrengthAssessmentSystemDescription;
+                break;
+            case "forgeBrand":
+                initialMessage = this._promptOptions.BrandForgeInitialBotMessage;
+                systemDescription = this._promptOptions.BrandForgeSystemDescription;
+                break;
+            default:
+                initialMessage = this._promptOptions.InitialBotMessage;
+                systemDescription = this._promptOptions.SystemDescription;
+                break;
+        }
+
         // Create a new chat session
-        var newChat = new ChatSession(chatParameters.Title, this._promptOptions.SystemDescription);
+        var newChat = new ChatSession(chatParameters.Title, systemDescription, chatParameters.BotPath);
         await this._sessionRepository.CreateAsync(newChat);
 
         // Create initial bot message
         var chatMessage = CopilotChatMessage.CreateBotResponseMessage(
             newChat.Id,
-            this._promptOptions.InitialBotMessage,
+            initialMessage,
             string.Empty, // The initial bot message doesn't need a prompt.
             null,
             TokenUtils.EmptyTokenUsages());
@@ -216,6 +242,7 @@ public class ChatHistoryController : ControllerBase
             chat!.Title = chatParameters.Title ?? chat!.Title;
             chat!.SystemDescription = chatParameters.SystemDescription ?? chat!.SafeSystemDescription;
             chat!.MemoryBalance = chatParameters.MemoryBalance ?? chat!.MemoryBalance;
+            chat!.BotPath = chatParameters.BotPath ?? chat!.BotPath;
             await this._sessionRepository.UpsertAsync(chat);
             await messageRelayHubContext.Clients.Group(chatId.ToString()).SendAsync(ChatEditedClientCall, chat);
 

@@ -13,4 +13,5 @@ public class CreateChatParameters
     /// </summary>
     [JsonPropertyName("title")]
     public string? Title { get; set; }
+    public string? BotPath { get; set; }
 }

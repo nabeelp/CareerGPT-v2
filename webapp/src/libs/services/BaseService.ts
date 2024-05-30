@@ -46,7 +46,7 @@ export class BaseService {
             // For each enabled plugin, pass its auth information as a customer header
             // to the backend so the server can authenticate to the plugin
             for (const plugin of enabledPlugins) {
-                headers.append(`x-sk-copilot-${plugin.headerTag}-auth`, plugin.authData ?? '');
+                headers.append(`x-sk-careercopilot-${plugin.headerTag}-auth`, plugin.authData ?? '');
             }
         }
 

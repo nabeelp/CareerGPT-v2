@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+import LogoImage from './assets/logo.png';
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { FluentProvider, Subtitle1, makeStyles, shorthands, tokens } from '@fluentui/react-components';
@@ -10,12 +11,11 @@ import { PluginGallery } from './components/open-api-plugins/PluginGallery';
 import { BackendProbe, ChatView, Error, Loading, Login } from './components/views';
 import { AuthHelper } from './libs/auth/AuthHelper';
 import { useChat, useFile } from './libs/hooks';
-import { AlertType } from './libs/models/AlertType';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
 import { RootState } from './redux/app/store';
 import { FeatureKeys } from './redux/features/app/AppState';
-import { addAlert, setActiveUserInfo, setServiceInfo } from './redux/features/app/appSlice';
-import { semanticKernelDarkTheme, semanticKernelLightTheme } from './styles';
+import { setActiveUserInfo, setServiceInfo } from './redux/features/app/appSlice';
+import { getPathTheme, headerBackgroundColor, headerTextColor } from './styles';
 
 export const useClasses = makeStyles({
     container: {
@@ -27,13 +27,9 @@ export const useClasses = makeStyles({
     },
     header: {
         alignItems: 'center',
-        backgroundColor: tokens.colorBrandForeground2,
-        color: tokens.colorNeutralForegroundOnBrand,
+        backgroundColor: headerBackgroundColor,
+        color: headerTextColor,
         display: 'flex',
-        '& h1': {
-            paddingLeft: tokens.spacingHorizontalXL,
-            display: 'flex',
-        },
         height: '48px',
         justifyContent: 'space-between',
         width: '100%',
@@ -42,9 +38,14 @@ export const useClasses = makeStyles({
         marginRight: tokens.spacingHorizontalXXL,
     },
     cornerItems: {
+        alignItems: 'center',
         display: 'flex',
         ...shorthands.gap(tokens.spacingHorizontalS),
     },
+    logo: {
+        height: '35px',
+        paddingLeft: tokens.spacingHorizontalXL,
+    }
 });
 
 enum AppState {
@@ -89,17 +90,6 @@ const App = () => {
                     }),
                 );
 
-                // Privacy disclaimer for internal Microsoft users
-                if (account.username.split('@')[1] === 'microsoft.com') {
-                    dispatch(
-                        addAlert({
-                            message:
-                                'By using Chat Copilot, you agree to protect sensitive data, not store it in chat, and allow chat history collection for service improvements. This tool is for internal use only.',
-                            type: AlertType.Info,
-                        }),
-                    );
-                }
-
                 setAppState(AppState.LoadingChats);
             }
         }
@@ -132,17 +122,20 @@ const App = () => {
     }, [instance, inProgress, isAuthenticated, appState, isMaintenance]);
 
     const content = <Chat classes={classes} appState={appState} setAppState={setAppState} />;
+
+    const { conversations, selectedId } = useAppSelector((state: RootState) => state.conversations);
+
     return (
         <FluentProvider
             className="app-container"
-            theme={features[FeatureKeys.DarkMode].enabled ? semanticKernelDarkTheme : semanticKernelLightTheme}
+            theme={getPathTheme(selectedId == '' ? 'careerPlan' : conversations[selectedId].botPath, features[FeatureKeys.DarkMode].enabled)}
         >
             {AuthHelper.isAuthAAD() ? (
                 <>
                     <UnauthenticatedTemplate>
                         <div className={classes.container}>
                             <div className={classes.header}>
-                                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                                <Subtitle1 as="h1">Career Copilot</Subtitle1>
                             </div>
                             {appState === AppState.SigningOut && <Loading text="Signing you out..." />}
                             {appState !== AppState.SigningOut && <Login />}
@@ -166,6 +159,7 @@ const Chat = ({
     appState: AppState;
     setAppState: (state: AppState) => void;
 }) => {
+    const { features } = useAppSelector((state: RootState) => state.app);
     const onBackendFound = React.useCallback(() => {
         setAppState(
             AuthHelper.isAuthAAD()
@@ -174,15 +168,24 @@ const Chat = ({
                 : // otherwise, we can load chats immediately
                   AppState.LoadingChats,
         );
+    // CUSTOM: Define the company logo and/or name in the divCompanyLogo div below, with the value from LogoImage being defined on line 2 above
     }, [setAppState]);
     return (
         <div className={classes.container}>
             <div className={classes.header}>
-                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                <div className={classes.cornerItems} id="divCompanyLogo">
+                    <img className={classes.logo} src={LogoImage} alt='Company logo' />
+                    <Subtitle1 as="h1">Contoso</Subtitle1>
+                </div>
+                <Subtitle1 as="h1">Career Copilot</Subtitle1>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
-                            <PluginGallery />
+                            {features[FeatureKeys.PluginsPlannersAndPersonas].enabled && (
+                                <>
+                                    <PluginGallery />
+                                </>
+                            )}
                             <UserSettingsMenu
                                 setLoadingState={() => {
                                     setAppState(AppState.SigningOut);

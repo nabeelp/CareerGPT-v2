@@ -47,9 +47,9 @@ public static class Program
         };
 
         rootCommand.SetHandler(async (files, chatCollectionId) =>
-            {
-                await ImportFilesAsync(files, config!, chatCollectionId);
-            },
+        {
+            await ImportFilesAsync(files, config!, chatCollectionId);
+        },
             filesOption,
             chatCollectionOption
         );
@@ -96,14 +96,37 @@ public static class Program
     /// <param name="chatCollectionId">Save the extracted context to an isolated chat collection.</param>
     private static async Task ImportFilesAsync(IEnumerable<FileInfo> files, Config config, Guid chatCollectionId)
     {
+        var allFiles = new List<FileInfo>();
         foreach (var file in files)
         {
-            if (!file.Exists)
+            // check if the supplied file parameter is a wildcard to get multiple files
+            if (file.Name.Contains("*"))
             {
-                Console.WriteLine($"File {file.FullName} does not exist.");
-                return;
+                var directory = Path.GetDirectoryName(file.FullName);
+                var searchPattern = Path.GetFileName(file.FullName);
+                var filesInDirectory = Directory.GetFiles(directory, searchPattern);
+                foreach (var fileInDirectory in filesInDirectory)
+                {
+                    allFiles.Add(new FileInfo(fileInDirectory));
+                }
+            }
+            else
+            {
+
+                if (!file.Exists)
+                {
+                    Console.WriteLine($"File {file.FullName} does not exist.");
+                    return;
+                }
+                else
+                {
+                    allFiles.Add(file);
+                }
             }
         }
+        Console.WriteLine(allFiles.Count == 1
+            ? $"Importing file {allFiles[0].FullName}..."
+            : $"Importing {allFiles.Count} files...");
 
         string? accessToken = null;
         if (config.AuthenticationType == "AzureAd")
@@ -116,59 +139,39 @@ public static class Program
             Console.WriteLine($"Successfully acquired access token. Continuing...");
         }
 
-        using var formContent = new MultipartFormDataContent();
-        List<StreamContent> filesContent = files.Select(file => new StreamContent(file.OpenRead())).ToList();
-        for (int i = 0; i < filesContent.Count; i++)
+        // Create a HttpClient instance and set the timeout to infinite since
+        // large documents will take a while to parse.
+        using HttpClientHandler clientHandler = new()
         {
-            formContent.Add(filesContent[i], "formFiles", files.ElementAt(i).Name);
+            CheckCertificateRevocationList = true
+        };
+        using HttpClient httpClient = new(clientHandler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan
+        };
+
+        if (config.AuthenticationType == "AzureAd")
+        {
+            // Add required properties to the request header.
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken!}");
         }
 
-
-        if (chatCollectionId != Guid.Empty)
+        // upload each file in turn
+        foreach (var file in allFiles)
         {
-            Console.WriteLine($"Uploading and parsing file to chat {chatCollectionId}...");
-
-            await UploadAsync(chatCollectionId);
-        }
-        else
-        {
-            Console.WriteLine("Uploading and parsing file to global collection...");
-
-            await UploadAsync();
-        }
-
-        // Dispose of all the file streams.
-        foreach (var fileContent in filesContent)
-        {
-            fileContent.Dispose();
-        }
-
-        async Task UploadAsync(Guid? chatId = null)
-        {
-            // Create a HttpClient instance and set the timeout to infinite since
-            // large documents will take a while to parse.
-            using HttpClientHandler clientHandler = new()
-            {
-                CheckCertificateRevocationList = true
-            };
-            using HttpClient httpClient = new(clientHandler)
-            {
-                Timeout = Timeout.InfiniteTimeSpan
-            };
-
-            if (config.AuthenticationType == "AzureAd")
-            {
-                // Add required properties to the request header.
-                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken!}");
-            }
+            // get the file content ready for upload
+            using var formContent = new MultipartFormDataContent();
+            using var fileContent = new StreamContent(file.OpenRead());
+            formContent.Add(fileContent, "formFiles", file.Name);
 
             string uriPath =
-                chatId.HasValue ?
-                $"chats/{chatId}/documents" :
+                chatCollectionId != Guid.Empty ?
+                $"chats/{chatCollectionId}/documents" :
                 "documents";
 
             try
             {
+                Console.WriteLine($"{file.Name} - Uploading started.");
                 using HttpResponseMessage response = await httpClient.PostAsync(
                     new Uri(new Uri(config.ServiceUri), uriPath),
                     formContent);
@@ -180,12 +183,19 @@ public static class Program
                     return;
                 }
 
-                Console.WriteLine("Uploading and parsing successful.");
+                response.Dispose();
+                Console.WriteLine($"{file.Name} - Uploading and parsing successful.");
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"{file.Name} - Error: {ex.Message}");
             }
+
+            // cleanup
+            fileContent.Dispose();
+            formContent.Dispose();
         }
+
+        httpClient.Dispose();
     }
 }
