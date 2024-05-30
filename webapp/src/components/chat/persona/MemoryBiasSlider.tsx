@@ -57,15 +57,17 @@ export const MemoryBiasSlider: React.FC = () => {
     }, [chatState]);
 
     const sliderValueChange = (value: number) => {
-        void chat.editChat(selectedId, chatState.title, chatState.systemDescription, value / 100, chatState.botPath).finally(() => {
-            setBalance(value);
-            dispatch(
-                editConversationMemoryBalance({
-                    id: selectedId,
-                    memoryBalance: value / 100,
-                }),
-            );
-        });
+        void chat
+            .editChat(selectedId, chatState.title, chatState.systemDescription, value / 100, chatState.botPath)
+            .finally(() => {
+                setBalance(value);
+                dispatch(
+                    editConversationMemoryBalance({
+                        id: selectedId,
+                        memoryBalance: value / 100,
+                    }),
+                );
+            });
     };
 
     return (
