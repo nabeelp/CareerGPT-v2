@@ -68,7 +68,7 @@ export interface Plan {
     index: number;
 }
 
-// Information about a single proposed plan from Career GPT
+// Information about a single proposed plan from Career Copilot
 export interface ProposedPlan {
     // Plan object to be approved or invoked
     proposedPlan: Plan;

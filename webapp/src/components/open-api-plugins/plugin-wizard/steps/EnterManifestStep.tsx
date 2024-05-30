@@ -82,7 +82,7 @@ export const EnterManifestStep: React.FC<IEnterManifestStepProps> = ({
                 </div>
             )}
             <Body1 italic>
-                Note: Career GPT currently only supports plugins requiring{' '}
+                Note: Career Copilot currently only supports plugins requiring{' '}
                 <a
                     href={'https://platform.openai.com/docs/plugins/authentication/no-authentication'}
                     target="_blank"

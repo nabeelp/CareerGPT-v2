@@ -135,7 +135,7 @@ const App = () => {
                     <UnauthenticatedTemplate>
                         <div className={classes.container}>
                             <div className={classes.header}>
-                                <Subtitle1 as="h1">Career GPT</Subtitle1>
+                                <Subtitle1 as="h1">Career Copilot</Subtitle1>
                             </div>
                             {appState === AppState.SigningOut && <Loading text="Signing you out..." />}
                             {appState !== AppState.SigningOut && <Login />}
@@ -177,7 +177,7 @@ const Chat = ({
                     <img className={classes.logo} src={LogoImage} alt='Company logo' />
                     <Subtitle1 as="h1">Contoso</Subtitle1>
                 </div>
-                <Subtitle1 as="h1">Career GPT</Subtitle1>
+                <Subtitle1 as="h1">Career Copilot</Subtitle1>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
