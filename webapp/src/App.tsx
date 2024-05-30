@@ -45,7 +45,7 @@ export const useClasses = makeStyles({
     logo: {
         height: '35px',
         paddingLeft: tokens.spacingHorizontalXL,
-    }
+    },
 });
 
 enum AppState {
@@ -128,7 +128,10 @@ const App = () => {
     return (
         <FluentProvider
             className="app-container"
-            theme={getPathTheme(selectedId == '' ? 'careerPlan' : conversations[selectedId].botPath, features[FeatureKeys.DarkMode].enabled)}
+            theme={getPathTheme(
+                selectedId == '' ? 'careerPlan' : conversations[selectedId].botPath,
+                features[FeatureKeys.DarkMode].enabled,
+            )}
         >
             {AuthHelper.isAuthAAD() ? (
                 <>
@@ -168,13 +171,13 @@ const Chat = ({
                 : // otherwise, we can load chats immediately
                   AppState.LoadingChats,
         );
-    // CUSTOM: Define the company logo and/or name in the divCompanyLogo div below, with the value from LogoImage being defined on line 2 above
+        // CUSTOM: Define the company logo and/or name in the divCompanyLogo div below, with the value from LogoImage being defined on line 2 above
     }, [setAppState]);
     return (
         <div className={classes.container}>
             <div className={classes.header}>
                 <div className={classes.cornerItems} id="divCompanyLogo">
-                    <img className={classes.logo} src={LogoImage} alt='Company logo' />
+                    <img className={classes.logo} src={LogoImage} alt="Company logo" />
                     <Subtitle1 as="h1">Contoso</Subtitle1>
                 </div>
                 <Subtitle1 as="h1">Career Copilot</Subtitle1>

@@ -210,7 +210,7 @@ export const useChat = () => {
             } else {
                 // No chats exist, create first chat window
                 dispatch(setShowNewDialog(true));
-        }
+            }
 
             return true;
         } catch (e: any) {
@@ -277,7 +277,6 @@ export const useChat = () => {
             default:
                 return botIconCareerPlan;
         }
-
     };
 
     const getChatMemorySources = async (chatId: string) => {
@@ -385,7 +384,13 @@ export const useChat = () => {
         return { success: true, message: '' };
     };
 
-    const editChat = async (chatId: string, title: string, syetemDescription: string, memoryBalance: number, botPath: string) => {
+    const editChat = async (
+        chatId: string,
+        title: string,
+        syetemDescription: string,
+        memoryBalance: number,
+        botPath: string,
+    ) => {
         try {
             await chatService.editChatAsync(
                 chatId,

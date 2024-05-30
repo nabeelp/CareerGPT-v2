@@ -44,7 +44,13 @@ export const PersonaTab: React.FC = () => {
                 info="The prompt that defines the chat bot's persona."
                 modificationHandler={async (newSystemDescription: string) => {
                     await chat
-                        .editChat(selectedId, chatState.title, newSystemDescription, chatState.memoryBalance, chatState.botPath)
+                        .editChat(
+                            selectedId,
+                            chatState.title,
+                            newSystemDescription,
+                            chatState.memoryBalance,
+                            chatState.botPath,
+                        )
                         .finally(() => {
                             dispatch(
                                 editConversationSystemDescription({
