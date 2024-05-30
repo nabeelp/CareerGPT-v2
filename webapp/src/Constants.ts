@@ -21,7 +21,7 @@ export const Constants = {
     bot: {
         profile: {
             id: 'bot',
-            fullName: 'CareerCopilot',
+            fullName: 'Career Copilot',
             emailAddress: '',
             photo: botIconCareerPlan,
         },
