@@ -122,6 +122,7 @@ while [[ $# -gt 0 ]]; do
     -app | --app-name)
         WEB_APP_NAME="$2"
         shift
+        shift
         ;;
     *)
         echo "Unknown option $1"
