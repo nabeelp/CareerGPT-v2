@@ -334,7 +334,7 @@ public class ChatPlugin
         await this._chatMessageRepository.UpsertAsync(chatMessage);
 
         // Extract semantic chat memory
-        await this.UpdateBotResponseStatusOnClientAsync(chatId, "Generating semantic chat memory", cancellationToken);
+        await this.UpdateBotResponseStatusOnClientAsync(chatId, null, cancellationToken);
         await AsyncUtils.SafeInvokeAsync(
             () => SemanticChatMemoryExtractor.ExtractSemanticChatMemoryAsync(
                 chatId,
