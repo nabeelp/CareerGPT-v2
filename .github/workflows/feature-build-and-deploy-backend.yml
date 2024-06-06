@@ -1,0 +1,48 @@
+name: copilot-deploy-pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["feature*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-webapi:
+    uses: ./.github/workflows/copilot-build-backend.yml
+
+  get-last-deployment:
+    runs-on: ${{ matrix.os }}
+    outputs:
+      deploymentName: ${{steps.get-last-successful-deployment.outputs.output_value}}
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{vars.AZURE_GITHUB_ACCESS_APP_ID}}
+          tenant-id: ${{vars.AZURE_GITHUB_ACCESS_TENANT_ID}}
+          subscription-id: ${{vars.AZURE_GITHUB_ACCESS_SUB_ID}}
+          enable-AzPSSession: false
+
+      - name: get-last-successful-deployment
+        uses: azure/CLI@v2
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            $deployments = az deployment group list --resource-group ${{vars.CC_DEPLOYMENT_GROUP_NAME}} --query "[?properties.provisioningState == 'Succeeded'].{name: name, timestamp: properties.timestamp}" --output json | ConvertFrom-Json
+            $mostRecentDeployment = $deployments | Sort-Object timestamp -Descending | Select-Object -First 1
+            echo "::set-output name=output_value::$(mostRecentDeployment.name)"
+
+  int:
+    needs: [build-webapi, get-last-deployment]
+    uses: ./.github/workflows/copilot-deploy-backend.yml
+    with:
+      ENVIRONMENT: int
+      ARTIFACT_NAME: ${{needs.build-webapi.outputs.artifact}}
+      DEPLOYMENT_NAME: ${{needs.get-last-deployment.outputs.deploymentName}}
