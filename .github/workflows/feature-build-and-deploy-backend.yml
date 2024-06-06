@@ -1,4 +1,4 @@
-name: copilot-deploy-pipeline
+name: feature-build-and-deploy-backend
 
 on:
   workflow_dispatch:
