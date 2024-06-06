@@ -28,6 +28,7 @@ usage() {
     echo "  -ws, --deploy-web-searcher-plugin          Deploy the web searcher plugin"
     echo "  -dd, --debug-deployment                    Switches on verbose template deployment output"
     echo "  -ndp, --no-deploy-package                  Skips deploying binary packages to cloud when set."
+    echo "  -app, --app-name                           The name of the app service, if specified."
 }
 
 # Parse arguments
@@ -118,6 +119,11 @@ while [[ $# -gt 0 ]]; do
         NO_DEPLOY_PACKAGE=true
         shift
         ;;
+    -app | --app-name)
+        WEB_APP_NAME="$2"
+        shift
+        shift
+        ;;
     *)
         echo "Unknown option $1"
         usage
@@ -206,7 +212,8 @@ JSON_CONFIG=$(
     "memoryStore": { "value": "$MEMORY_STORE" },
     "deployCosmosDB": { "value": $([ "$NO_COSMOS_DB" = true ] && echo "false" || echo "true") },
     "deploySpeechServices": { "value": $([ "$NO_SPEECH_SERVICES" = true ] && echo "false" || echo "true") },
-    "deployWebSearcherPlugin": { "value": $([ "$DEPLOY_WEB_SEARCHER_PLUGIN" = true ] && echo "true" || echo "false") }
+    "deployWebSearcherPlugin": { "value": $([ "$DEPLOY_WEB_SEARCHER_PLUGIN" = true ] && echo "true" || echo "false") },
+    "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" }
 }
 EOF
 )

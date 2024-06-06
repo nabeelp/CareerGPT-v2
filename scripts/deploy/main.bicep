@@ -81,6 +81,9 @@ param deployPackages bool = true
 @description('Region for the resources')
 param location string = resourceGroup().location
 
+@description('Custom name for the web app')
+param customWebAppName string
+
 @description('Hash of the resource group ID')
 var rgIdHash = uniqueString(resourceGroup().id)
 
@@ -89,6 +92,9 @@ var uniqueName = '${name}-${rgIdHash}'
 
 @description('Name of the Azure Storage file share to create')
 var storageFileShareName = 'aciqdrantshare'
+
+@description('Name of the Web App to create, use the value in customWebAppName, if provided')
+var webAppName = customWebAppName == null ? 'app-${uniqueName}-webapi' : customWebAppName
 
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (deployNewAzureOpenAI) {
   name: 'ai-${uniqueName}'
@@ -145,7 +151,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
 }
 
 resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
-  name: 'app-${uniqueName}-webapi'
+  name: webAppName
   location: location
   kind: 'app'
   tags: {

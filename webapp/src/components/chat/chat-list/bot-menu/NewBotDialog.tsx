@@ -3,6 +3,7 @@
 import { FC } from 'react';
 
 import {
+    Avatar,
     Button,
     Dialog,
     DialogActions,
@@ -14,25 +15,24 @@ import {
     Tooltip,
     makeStyles,
     shorthands,
-    Avatar,
 } from '@fluentui/react-components';
-import { useChat } from '../../../../libs/hooks';
-import { Add20 } from '../../../shared/BundledIcons';
+import botIconAssessStrengths from '../../../../assets/bot-icons/bot-icon-assessstrengths.png';
 import botIconCareerPlan from '../../../../assets/bot-icons/bot-icon-careerplan.png';
 import botIconFindRole from '../../../../assets/bot-icons/bot-icon-findrole.png';
-import botIconAssessStrengths from '../../../../assets/bot-icons/bot-icon-assessstrengths.png';
 import botIconForgeBrand from '../../../../assets/bot-icons/bot-icon-forgebrand.png';
-import {
-    headerBackgroundColor,
-    customTokens,
-    careerPlanKeyColor,
-    findRoleKeyColor,
-    assessStrengthsKeyColor,
-    forgeBrandKeyColor,
-} from '../../../../styles';
+import { useChat } from '../../../../libs/hooks';
 import { useAppDispatch, useAppSelector } from '../../../../redux/app/hooks';
 import { RootState } from '../../../../redux/app/store';
 import { setShowNewDialog } from '../../../../redux/features/conversations/conversationsSlice';
+import {
+    assessStrengthsKeyColor,
+    careerPlanKeyColor,
+    customTokens,
+    findRoleKeyColor,
+    forgeBrandKeyColor,
+    headerBackgroundColor,
+} from '../../../../styles';
+import { Add20 } from '../../../shared/BundledIcons';
 
 const useClasses = makeStyles({
     root: {
@@ -41,7 +41,7 @@ const useClasses = makeStyles({
         flexWrap: 'nowrap',
         width: '700px',
         maxWidth: '700px',
-        height: '430px',
+        height: '460px',
         boxSizing: 'border-box',
         '> *': {
             textOverflow: 'ellipsis',
@@ -93,12 +93,17 @@ const useClasses = makeStyles({
         lineHeight: customTokens.lineHeightBase100,
         paddingLeft: '5px',
         paddingRight: '5px',
-        height: '120px',
+        height: '110px',
     },
     cardButton: {
+        fontStyle: 'italic',
+        fontSize: customTokens.fontSizeBase200,
+        lineHeight: customTokens.lineHeightBase100,
         verticalAlign: 'bottom',
         marginBottom: '10px',
-        height: '32px',
+        paddingLeft: '5px',
+        paddingRight: '5px',
+        height: '72px',
     },
     careerPlanButton: {
         hover: careerPlanKeyColor,
@@ -141,6 +146,7 @@ export const NewBotDialog: FC = () => {
             title: 'Build my career plan',
             description:
                 'Discover roles that match your skills and create a personalized career development plan, which will include a skills gap analysis and a learning plan.',
+            time: 'Expected time to complete: 25 minutes',
             icon: botIconCareerPlan,
             buttonClass: classes.careerPlanButton,
             action: onStartCareerPlan,
@@ -149,6 +155,7 @@ export const NewBotDialog: FC = () => {
             title: 'Find my next role',
             description:
                 'Explore potential future roles based on your current skills and receive a matrix showing how your skills align with these roles.',
+            time: 'Expected time to complete: 15 minutes',
             icon: botIconFindRole,
             buttonClass: classes.findRoleButton,
             action: onStartFindRole,
@@ -157,6 +164,7 @@ export const NewBotDialog: FC = () => {
             title: 'Assess my strengths',
             description:
                 'Identify your strengths, weaknesses, skills, and interests, and receive guidance on areas for development along with role suggestions that may suit you.',
+            time: 'Expected time to complete: 30 minutes',
             icon: botIconAssessStrengths,
             buttonClass: classes.assessStrengthsButton,
             action: onStartAssessStrengths,
@@ -165,6 +173,7 @@ export const NewBotDialog: FC = () => {
             title: 'Forge my brand',
             description:
                 'Develop a strong personal brand by defining a statement that reflects your unique qualities, professional strengths, core values, and impact.',
+            time: 'Expected time to complete: 30 minutes',
             icon: botIconForgeBrand,
             buttonClass: classes.forgeBrandButton,
             action: onStartForgeBrand,
@@ -199,6 +208,7 @@ export const NewBotDialog: FC = () => {
                                         <p>{card.description}</p>
                                     </div>
                                     <div className={classes.cardButton}>
+                                        {card.time}<br/>&nbsp;<br/>
                                         <DialogTrigger action="close" disableButtonEnhancement>
                                             <Button onClick={card.action} className={card.buttonClass}>
                                                 Let&apos;s start
