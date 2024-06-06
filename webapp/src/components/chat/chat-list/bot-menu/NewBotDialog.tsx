@@ -93,7 +93,7 @@ const useClasses = makeStyles({
         lineHeight: customTokens.lineHeightBase100,
         paddingLeft: '5px',
         paddingRight: '5px',
-        height: '120px',
+        height: '110px',
     },
     cardButton: {
         fontStyle: 'italic',
