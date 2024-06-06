@@ -18,6 +18,7 @@ jobs:
     uses: ./.github/workflows/copilot-build-backend.yml
 
   get-last-deployment:
+    environment: int
     runs-on: ${{ matrix.os }}
     outputs:
       deploymentName: ${{steps.get-last-successful-deployment.outputs.output_value}}
