@@ -93,12 +93,17 @@ const useClasses = makeStyles({
         lineHeight: customTokens.lineHeightBase100,
         paddingLeft: '5px',
         paddingRight: '5px',
-        height: '150px',
+        height: '120px',
     },
     cardButton: {
+        fontStyle: 'italic',
+        fontSize: customTokens.fontSizeBase200,
+        lineHeight: customTokens.lineHeightBase100,
         verticalAlign: 'bottom',
         marginBottom: '10px',
-        height: '32px',
+        paddingLeft: '5px',
+        paddingRight: '5px',
+        height: '72px',
     },
     careerPlanButton: {
         hover: careerPlanKeyColor,
@@ -201,9 +206,9 @@ export const NewBotDialog: FC = () => {
                                     </div>
                                     <div className={classes.cardContent}>
                                         <p>{card.description}</p>
-                                        <p>{card.time}</p>
                                     </div>
                                     <div className={classes.cardButton}>
+                                        {card.time}<br/>&nbsp;<br/>
                                         <DialogTrigger action="close" disableButtonEnhancement>
                                             <Button onClick={card.action} className={card.buttonClass}>
                                                 Let&apos;s start
