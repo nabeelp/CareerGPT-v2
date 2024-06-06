@@ -39,7 +39,7 @@ jobs:
         with:
           azcliversion: 2.30.0
           inlineScript: |
-            DEPLOYMENT_NAME=$(az deployment group list --resource-group ${{vars.CC_DEPLOYMENT_GROUP_NAME}} --query "[?provisioningState=='Succeeded' && starts_with(name, 'int')].{name:name, timestamp:properties.timestamp}" --output tsv | sort -k2r | head -n 1 | cut -f1)
+            DEPLOYMENT_NAME=$(az deployment group list --resource-group ${{vars.CC_DEPLOYMENT_GROUP_NAME}} --query "[?properties.provisioningState=='Succeeded' && starts_with(name, 'int')].{name:name, timestamp:properties.timestamp}" --output tsv | sort -k2r | head -n 1 | cut -f1)
             echo "$DEPLOYMENT_NAME"
             echo "deploymentName=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
