@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: ["feature*"]
+    paths:
+      - "webapi/**"
+      - "webapp/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -19,7 +22,7 @@ jobs:
 
   get-last-deployment:
     environment: int
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     outputs:
       deploymentName: ${{steps.get-last-successful-deployment.outputs.output_value}}
     steps:
