@@ -40,7 +40,7 @@ jobs:
           azcliversion: 2.30.0
           inlineScript: |
             DEPLOYMENT_NAME=$(az deployment group list --resource-group ${{vars.CC_DEPLOYMENT_GROUP_NAME}} --query "[?provisioningState=='Succeeded' && starts_with(name, 'int')].{name:name, timestamp:properties.timestamp}" --output tsv | sort -k2r | head -n 1 | cut -f1)
-            echo "::set-output name=output_value::$DEPLOYMENT_NAME"
+            echo "output_value=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
   int:
     needs: [build-webapi, get-last-deployment]
