@@ -24,9 +24,10 @@ jobs:
     environment: int
     runs-on: ubuntu-latest
     outputs:
-      deploymentName: ${{steps.get-last-successful-deployment.outputs.deploymentName}}
+      deploymentName: ${{steps.step2.outputs.deploymentName}}
     steps:
-      - name: Azure login
+      - id: step1
+        name: Azure login
         uses: azure/login@v2
         with:
           client-id: ${{vars.AZURE_GITHUB_ACCESS_APP_ID}}
@@ -34,14 +35,15 @@ jobs:
           subscription-id: ${{vars.AZURE_GITHUB_ACCESS_SUB_ID}}
           enable-AzPSSession: false
 
-      - name: get-last-successful-deployment
+      - id: step2
+        name: get-last-successful-deployment
         uses: azure/CLI@v2
         with:
           azcliversion: 2.30.0
           inlineScript: |
             DEPLOYMENT_NAME=$(az deployment group list --resource-group ${{vars.CC_DEPLOYMENT_GROUP_NAME}} --query "[?properties.provisioningState=='Succeeded' && starts_with(name, 'int')].{name:name, timestamp:properties.timestamp}" --output tsv | sort -k2r | head -n 1 | cut -f1)
             echo "$DEPLOYMENT_NAME"
-            echo "deploymentName=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
+            echo "deploymentName=${DEPLOYMENT_NAME}" >> "$GITHUB_OUTPUT"
 
   int:
     needs: [build-webapi, get-last-deployment]
