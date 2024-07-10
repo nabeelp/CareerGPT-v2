@@ -6,9 +6,8 @@ import { FluentProvider, Subtitle1, makeStyles, shorthands, tokens } from '@flue
 
 import * as React from 'react';
 import { useEffect } from 'react';
-import { UserSettingsMenu } from './components/header/UserSettingsMenu';
-import { PluginGallery } from './components/open-api-plugins/PluginGallery';
-import { BackendProbe, ChatView, Error, Loading, Login } from './components/views';
+import Chat from './components/chat/Chat';
+import { Loading, Login } from './components/views';
 import { AuthHelper } from './libs/auth/AuthHelper';
 import { useChat, useFile } from './libs/hooks';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
@@ -48,7 +47,7 @@ export const useClasses = makeStyles({
     },
 });
 
-enum AppState {
+export enum AppState {
     ProbeForBackend,
     SettingUserInfo,
     ErrorLoadingChats,
