@@ -10,7 +10,9 @@
 				"ms-dotnettools.vscode-dotnet-runtime",
 				"ms-semantic-kernel.semantic-kernel",
 				"esbenp.prettier-vscode",
-				"oderwat.indent-rainbow"
+				"oderwat.indent-rainbow",
+				"github.vscode-github-actions",
+				"ms-azuretools.vscode-bicep"
 			]
 		}
 	},
