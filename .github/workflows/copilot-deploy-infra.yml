@@ -45,11 +45,13 @@ jobs:
 
       - name: deploy-infra
         uses: azure/CLI@v2
-        with:
+        env:
           OPENAI_KEY: ${{secrets.AZURE_OPENAI_ENDPOINT_KEY}}
+        with:
           azcliversion: 2.30.0
           inlineScript: |
-            if [ -z "$OPENAI_KEY" ]; then
+            echo "Value = ${{env.OPENAI_KEY}}"
+            if [ -z "${{env.OPENAI_KEY}}" ]; then
               AI_SERVICE_KEY=$(az cognitiveservices account keys list --name ${{vars.AZURE_OPENAI_NAME}} --resource-group ${{vars.AZUREOPENAI_DEPLOYMENT_GROUP_NAME}} | jq -r '.key1')
             else
               AI_SERVICE_KEY="$OPENAI_KEY"
