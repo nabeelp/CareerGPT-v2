@@ -46,7 +46,7 @@ jobs:
       - name: deploy-infra
         uses: azure/CLI@v2
         env:
-          OPENAI_KEY: ${{secrets.AZURE_OPENAI_ENDPOINT_KEY}}
+          OPENAI_KEY: "${{secrets.AZURE_OPENAI_ENDPOINT_KEY}}"
         with:
           azcliversion: 2.30.0
           inlineScript: |
