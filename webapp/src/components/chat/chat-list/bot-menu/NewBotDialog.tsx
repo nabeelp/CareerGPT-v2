@@ -208,7 +208,10 @@ export const NewBotDialog: FC = () => {
                                         <p>{card.description}</p>
                                     </div>
                                     <div className={classes.cardButton}>
-                                        {card.time}<br/>&nbsp;<br/>
+                                        {card.time}
+                                        <br />
+                                        &nbsp;
+                                        <br />
                                         <DialogTrigger action="close" disableButtonEnhancement>
                                             <Button onClick={card.action} className={card.buttonClass}>
                                                 Let&apos;s start
