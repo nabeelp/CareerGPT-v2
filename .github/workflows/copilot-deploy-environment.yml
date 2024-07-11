@@ -29,6 +29,7 @@ jobs:
     uses: ./.github/workflows/copilot-deploy-infra.yml
     with:
       ENVIRONMENT: ${{inputs.ENVIRONMENT}}
+    secrets: inherit
 
   deploy-backend:
     needs: [deploy-infra]
