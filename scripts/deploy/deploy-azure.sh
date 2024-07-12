@@ -29,6 +29,7 @@ usage() {
     echo "  -dd, --debug-deployment                    Switches on verbose template deployment output"
     echo "  -ndp, --no-deploy-package                  Skips deploying binary packages to cloud when set."
     echo "  -app, --app-name                           The name of the app service, if specified."
+    echo "  -cm, --completion-model                    The name of the OpenAI completion model to use, e.g. gpt4-o"
 }
 
 # Parse arguments
@@ -124,6 +125,11 @@ while [[ $# -gt 0 ]]; do
         shift
         shift
         ;;
+    -cm | --completion-model)
+        COMPLETION_MODEL="$2"
+        shift
+        shift
+        ;;
     *)
         echo "Unknown option $1"
         usage
@@ -213,7 +219,8 @@ JSON_CONFIG=$(
     "deployCosmosDB": { "value": $([ "$NO_COSMOS_DB" = true ] && echo "false" || echo "true") },
     "deploySpeechServices": { "value": $([ "$NO_SPEECH_SERVICES" = true ] && echo "false" || echo "true") },
     "deployWebSearcherPlugin": { "value": $([ "$DEPLOY_WEB_SEARCHER_PLUGIN" = true ] && echo "true" || echo "false") },
-    "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" }
+    "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" },
+    "completionModel": { "value": "$COMPLETION_MODEL" }
 }
 EOF
 )
