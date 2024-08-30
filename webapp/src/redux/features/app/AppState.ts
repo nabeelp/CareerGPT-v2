@@ -97,7 +97,7 @@ export const Features = {
         inactive: true,
     },
     [FeatureKeys.BotAsDocs]: {
-        enabled: false,
+        enabled: true,
         label: 'Export Chat Sessions',
     },
     [FeatureKeys.MultiUserChat]: {
