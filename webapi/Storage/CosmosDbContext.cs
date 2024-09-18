@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Azure.Identity;
 using CopilotChat.WebApi.Models.Storage;
 using Microsoft.Azure.Cosmos;
 
@@ -43,7 +44,7 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
             },
         };
-        this._client = new CosmosClient(connectionString, options);
+        this._client = new CosmosClient(connectionString, new DefaultAzureCredential(), options);
         this._container = this._client.GetContainer(database, container);
     }
 
