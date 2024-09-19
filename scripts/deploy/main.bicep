@@ -165,6 +165,9 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
       healthCheckPath: '/healthz'
     }
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
@@ -235,7 +238,7 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'ChatStore:Cosmos:ConnectionString'
-          value: deployCosmosDB ? cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString : ''
+          value: deployCosmosDB ? cosmosAccount.properties.documentEndpoint : ''
         }
         {
           name: 'AzureSpeech:Region'
