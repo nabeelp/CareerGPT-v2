@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using CopilotChat.WebApi.Models.Storage;
 
@@ -57,5 +58,5 @@ public interface ICopilotChatMessageStorageContext : IStorageContext<CopilotChat
     /// <param name="skip">Number of messages to skip before starting to return messages.</param>
     /// <param name="count">The number of messages to return. -1 returns all messages.</param>
     /// <returns>A list of ChatMessages matching the given chatId sorted from most recent to oldest.</returns>
-    Task<IEnumerable<CopilotChatMessage>> QueryEntitiesAsync(Func<CopilotChatMessage, bool> predicate, int skip = 0, int count = -1);
+    Task<IEnumerable<CopilotChatMessage>> QueryEntitiesAsync(Expression<Func<CopilotChatMessage, bool>> predicate, int skip = 0, int count = -1);
 }

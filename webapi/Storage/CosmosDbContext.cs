@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
 using Azure.Identity;
@@ -139,7 +140,7 @@ public class CosmosDbCopilotChatMessageContext : CosmosDbContext<CopilotChatMess
     }
 
     /// <inheritdoc/>
-    public Task<IEnumerable<CopilotChatMessage>> QueryEntitiesAsync(Func<CopilotChatMessage, bool> predicate, int skip, int count)
+    public Task<IEnumerable<CopilotChatMessage>> QueryEntitiesAsync(Expression<Func<CopilotChatMessage, bool>> predicate, int skip, int count)
     {
         return Task.Run<IEnumerable<CopilotChatMessage>>(
                 () => this._container.GetItemLinqQueryable<CopilotChatMessage>(true)
