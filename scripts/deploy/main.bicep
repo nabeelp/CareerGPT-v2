@@ -697,36 +697,69 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
-// Assign access to the funciton app, web api and the memory pipeline apps to the storage account
-@description('This is the built-in Storage Account Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage')
-resource storageContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+// Assign access to the funciton app, web api and the memory pipeline apps to the storage account (blob and queues)
+@description('This is the built-in Storage Blob Data Owner role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage')
+resource storageBlobRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
-  name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
 }
 
-resource storageAccessFunctionApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployWebSearcherPlugin) {
-  name: guid('${functionAppWebSearcherPlugin.name}-storage-access-${uniqueName}')
+@description('This is the built-in Storage Queue Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage')
+resource storageQueueRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
+}
+
+resource storageBlobAccessFunctionApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployWebSearcherPlugin) {
+  name: guid('${functionAppWebSearcherPlugin.name}-storage-blob-access-${uniqueName}')
   scope: storage
   properties: {
-    roleDefinitionId: storageContributorRoleDefinition.id
+    roleDefinitionId: storageBlobRoleDefinition.id
     principalId: functionAppWebSearcherPlugin.identity.principalId
   }
 }
 
-resource storageAccessWebApi 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid('${appServiceWeb.name}-storage-access-${uniqueName}')
+resource storageQueueAccessFunctionApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployWebSearcherPlugin) {
+  name: guid('${functionAppWebSearcherPlugin.name}-storage-queue-access-${uniqueName}')
   scope: storage
   properties: {
-    roleDefinitionId: storageContributorRoleDefinition.id
+    roleDefinitionId: storageQueueRoleDefinition.id
+    principalId: functionAppWebSearcherPlugin.identity.principalId
+  }
+}
+
+resource storageBlobAccessWebApi 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceWeb.name}-storage-blob-access-${uniqueName}')
+  scope: storage
+  properties: {
+    roleDefinitionId: storageBlobRoleDefinition.id
     principalId: appServiceWeb.identity.principalId
   }
 }
 
-resource storageAccessMemoryPipeline 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid('${appServiceMemoryPipeline.name}-storage-access-${uniqueName}')
+resource storageQueueAccessWebApi 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceWeb.name}-storage-queue-access-${uniqueName}')
   scope: storage
   properties: {
-    roleDefinitionId: storageContributorRoleDefinition.id
+    roleDefinitionId: storageQueueRoleDefinition.id
+    principalId: appServiceWeb.identity.principalId
+  }
+}
+
+resource storageBlobAccessMemoryPipeline 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceMemoryPipeline.name}-storage-blob-access-${uniqueName}')
+  scope: storage
+  properties: {
+    roleDefinitionId: storageBlobRoleDefinition.id
+    principalId: appServiceMemoryPipeline.identity.principalId
+  }
+}
+
+resource storageQueueAccessMemoryPipeline 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceMemoryPipeline.name}-storage-queue-access-${uniqueName}')
+  scope: storage
+  properties: {
+    roleDefinitionId: storageQueueRoleDefinition.id
     principalId: appServiceMemoryPipeline.identity.principalId
   }
 }
