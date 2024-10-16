@@ -30,6 +30,9 @@ usage() {
     echo "  -ndp, --no-deploy-package                  Skips deploying binary packages to cloud when set."
     echo "  -app, --app-name                           The name of the app service, if specified."
     echo "  -cm, --completion-model                    The name of the OpenAI completion model to use, e.g. gpt4-o"
+    echo "  -das, --deploy-azure-search                Deploy Azure Search"
+    echo "  -ais, --ai-search-endpoint                 Azure Search endpoint"
+    echo "  -aisk, --ai-search-key                     Azure Search key"
 }
 
 # Parse arguments
@@ -130,6 +133,20 @@ while [[ $# -gt 0 ]]; do
         shift
         shift
         ;;
+    -das | --deploy-azure-search)
+        DEPLOY_AZURE_SEARCH=true
+        shift
+        ;;
+    -ais | --ai-search-endpoint)
+        AI_SEARCH_ENDPOINT="$2"
+        shift
+        shift
+        ;;
+    -aisk | --ai-search-key)
+        AI_SEARCH_KEY="$2"
+        shift
+        shift
+        ;;
     *)
         echo "Unknown option $1"
         usage
@@ -137,6 +154,16 @@ while [[ $# -gt 0 ]]; do
         ;;
     esac
 done
+
+# Set defaults
+: "${REGION:="southcentralus"}"
+: "${WEB_APP_SVC_SKU:="B1"}"
+: "${AZURE_AD_INSTANCE:="https://login.microsoftonline.com"}"
+: "${MEMORY_STORE:="AzureAISearch"}"
+: "${NO_COSMOS_DB:=false}"
+: "${NO_SPEECH_SERVICES:=false}"
+: "${DEPLOY_WEB_SEARCHER_PLUGIN:=false}"
+: "${DEPLOY_AZURE_SEARCH:=false}"
 
 # Check mandatory arguments
 if [[ -z "$DEPLOYMENT_NAME" ]] || [[ -z "$SUBSCRIPTION" ]] || [[ -z "$BACKEND_CLIENT_ID" ]] || [[ -z "$FRONTEND_CLIENT_ID" ]] || [[ -z "$AZURE_AD_TENANT_ID" ]] || [[ -z "$AI_SERVICE_TYPE" ]]; then
@@ -177,6 +204,18 @@ if [[ "${AI_SERVICE_TYPE,,}" = "openai" ]] && [[ -z "$AI_SERVICE_KEY" ]]; then
     exit 1
 fi
 
+# if DEPLOY_AZURE_SEARCH is false and AI_SEARCH_ENDPOINT and AI_SEARCH_KEY are not set, then stop processing
+if [[ "$DEPLOY_AZURE_SEARCH" = false ]] && [[ (-z "$AI_SEARCH_ENDPOINT" || -z "$AI_SEARCH_KEY") ]]; then
+    echo "When --deploy-azure-search is false, --ai-search-endpoint and --ai-search-key must be set."
+    usage
+    exit 1
+fi
+
+# if DEPLOY_AZURE_SEARCH is true, if AI_SEARCH_ENDPOINT or AI_SEARCH_KEY should are set, output a warning
+if [[ "$DEPLOY_AZURE_SEARCH" = true ]] && [[ (-n "$AI_SEARCH_ENDPOINT" || -n "$AI_SEARCH_KEY") ]]; then
+    echo "When --deploy-azure-search is true, --ai-search-endpoint and --ai-search-key will be ignored."
+fi
+
 # If resource group is not set, then set it to rg-DEPLOYMENT_NAME
 if [ -z "$RESOURCE_GROUP" ]; then
     RESOURCE_GROUP="rg-${DEPLOYMENT_NAME}"
@@ -192,15 +231,6 @@ fi
 
 az account set -s "$SUBSCRIPTION"
 
-# Set defaults
-: "${REGION:="southcentralus"}"
-: "${WEB_APP_SVC_SKU:="B1"}"
-: "${AZURE_AD_INSTANCE:="https://login.microsoftonline.com"}"
-: "${MEMORY_STORE:="AzureAISearch"}"
-: "${NO_COSMOS_DB:=false}"
-: "${NO_SPEECH_SERVICES:=false}"
-: "${DEPLOY_WEB_SEARCHER_PLUGIN:=false}"
-
 # Create JSON config
 JSON_CONFIG=$(
     cat <<EOF
@@ -208,7 +238,6 @@ JSON_CONFIG=$(
     "webAppServiceSku": { "value": "$WEB_APP_SVC_SKU" },
     "aiService": { "value": "$AI_SERVICE_TYPE" },
     "aiApiKey": { "value": "$AI_SERVICE_KEY" },
-    "deployPackages": { "value": $([ "$NO_DEPLOY_PACKAGE" = true ] && echo "false" || echo "true") },
     "aiEndpoint": { "value": "$([ ! -z "$AI_ENDPOINT" ] && echo "$AI_ENDPOINT")" },
     "azureAdInstance": { "value": "$AZURE_AD_INSTANCE" },
     "azureAdTenantId": { "value": "$AZURE_AD_TENANT_ID" },
@@ -220,7 +249,10 @@ JSON_CONFIG=$(
     "deploySpeechServices": { "value": $([ "$NO_SPEECH_SERVICES" = true ] && echo "false" || echo "true") },
     "deployWebSearcherPlugin": { "value": $([ "$DEPLOY_WEB_SEARCHER_PLUGIN" = true ] && echo "true" || echo "false") },
     "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" },
-    "completionModel": { "value": "$COMPLETION_MODEL" }
+    "completionModel": { "value": "$COMPLETION_MODEL" },
+    "deployNewAISearch": { "value": $([ "$DEPLOY_AZURE_SEARCH" = true ] && echo "true" || echo "false") },
+    "aiSearchEndpoint": { "value": "$([ ! -z "$AI_SEARCH_ENDPOINT" ] && echo "$AI_SEARCH_ENDPOINT")" },
+    "aiSearchKey": { "value": "$([ ! -z "$AI_SEARCH_KEY" ] && echo "$AI_SEARCH_KEY")" }
 }
 EOF
 )

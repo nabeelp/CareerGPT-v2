@@ -12,23 +12,7 @@ param name string = 'copichat'
 @allowed([ 'B1', 'S1', 'S2', 'S3', 'P1V3', 'P2V3', 'I1V2', 'I2V2' ])
 param webAppServiceSku string = 'B1'
 
-@description('Location of package to deploy as the web service')
-#disable-next-line no-hardcoded-env-urls
-param webApiPackageUri string = 'https://aka.ms/copilotchat/webapi/latest'
-
-@description('Location of package to deploy as the memory pipeline')
-#disable-next-line no-hardcoded-env-urls
-param memoryPipelinePackageUri string = 'https://aka.ms/copilotchat/memorypipeline/latest'
-
-@description('Location of the websearcher plugin to deploy')
-#disable-next-line no-hardcoded-env-urls
-param webSearcherPackageUri string = 'https://aka.ms/copilotchat/websearcher/latest'
-
 @description('Underlying AI service')
-@allowed([
-  'AzureOpenAI'
-  'OpenAI'
-])
 param aiService string = 'AzureOpenAI'
 
 @description('Model to use for chat completions')
@@ -37,11 +21,11 @@ param completionModel string = 'gpt-4o'
 @description('Model to use for text embeddings')
 param embeddingModel string = 'text-embedding-ada-002'
 
-@description('Azure OpenAI endpoint to use (Azure OpenAI only)')
+@description('Azure OpenAI endpoint')
 param aiEndpoint string = ''
 
-@secure()
-@description('Azure OpenAI or OpenAI API key')
+//@secure()
+@description('Azure OpenAI key')
 param aiApiKey string
 
 @description('Azure AD client ID for the backend web API')
@@ -63,20 +47,22 @@ param deployNewAzureOpenAI bool = false
 param deployCosmosDB bool = true
 
 @description('What method to use to persist embeddings')
-@allowed([
-  'AzureAISearch'
-  'Qdrant'
-])
 param memoryStore string = 'AzureAISearch'
+
+@description('Whether to deploy a new Azure AI Search instance')
+param deployNewAISearch bool = false
+
+@description('Existing Azure AI Search endpoint')
+param aiSearchEndpoint string
+
+@description('Existing Azure AI Search key')
+param aiSearchKey string
 
 @description('Whether to deploy Azure Speech Services to enable input by voice')
 param deploySpeechServices bool = true
 
 @description('Whether to deploy the web searcher plugin, which requires a Bing resource')
 param deployWebSearcherPlugin bool = false
-
-@description('Whether to deploy pre-built binary packages to the cloud')
-param deployPackages bool = true
 
 @description('Region for the resources')
 param location string = resourceGroup().location
@@ -89,9 +75,6 @@ var rgIdHash = uniqueString(resourceGroup().id)
 
 @description('Deployment name unique to resource group')
 var uniqueName = '${name}-${rgIdHash}'
-
-@description('Name of the Azure Storage file share to create')
-var storageFileShareName = 'aciqdrantshare'
 
 @description('Name of the Web App to create, use the value in customWebAppName, if provided')
 var webAppName = customWebAppName == null ? 'app-${uniqueName}-webapi' : customWebAppName
@@ -108,6 +91,7 @@ resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (deployNe
   }
 }
 
+// Create Azure OpenAI resources
 resource openAI_completionModel 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (deployNewAzureOpenAI) {
   parent: openAI
   name: completionModel
@@ -141,6 +125,7 @@ resource openAI_embeddingModel 'Microsoft.CognitiveServices/accounts/deployments
   ]
 }
 
+// Create app service plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: 'asp-${uniqueName}-webapi'
   location: location
@@ -150,6 +135,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   }
 }
 
+// Create Web API + Frontend resources
 resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
   name: webAppName
   location: location
@@ -160,7 +146,6 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    virtualNetworkSubnetId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
     siteConfig: {
       healthCheckPath: '/healthz'
     }
@@ -173,9 +158,6 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
 resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
   parent: appServiceWeb
   name: 'web'
-  dependsOn: [
-    webSubnetConnection
-  ]
   properties: {
     alwaysOn: false
     cors: {
@@ -326,11 +308,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory:Services:AzureBlobs:Auth'
-          value: 'ConnectionString'
+          value: 'AzureIdentity'
         }
         {
-          name: 'KernelMemory:Services:AzureBlobs:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
+          name: 'KernelMemory:Services:AzureBlobs:Account'
+          value: storage.name
         }
         {
           name: 'KernelMemory:Services:AzureBlobs:Container'
@@ -338,11 +320,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory:Services:AzureQueue:Auth'
-          value: 'ConnectionString'
+          value: 'AzureIdentity'
         }
         {
-          name: 'KernelMemory:Services:AzureQueue:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
+          name: 'KernelMemory:Services:AzureQueue:Account'
+          value: storage.name
         }
         {
           name: 'KernelMemory:Services:AzureAISearch:Auth'
@@ -350,15 +332,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory:Services:AzureAISearch:Endpoint'
-          value: memoryStore == 'AzureAISearch' ? 'https://${azureAISearch.name}.search.windows.net' : ''
+          value: deployNewAISearch ? 'https://${azureAISearch.name}.search.windows.net' : aiSearchEndpoint
         }
         {
           name: 'KernelMemory:Services:AzureAISearch:APIKey'
-          value: memoryStore == 'AzureAISearch' ? azureAISearch.listAdminKeys().primaryKey : ''
-        }
-        {
-          name: 'KernelMemory:Services:Qdrant:Endpoint'
-          value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
+          value: deployNewAISearch ? azureAISearch.listAdminKeys().primaryKey : aiSearchKey
         }
         {
           name: 'KernelMemory:Services:AzureOpenAIText:Auth'
@@ -431,18 +409,7 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
   }
 }
 
-resource appServiceWebDeploy 'Microsoft.Web/sites/extensions@2022-09-01' = if (deployPackages) {
-  name: 'MSDeploy'
-  kind: 'string'
-  parent: appServiceWeb
-  properties: {
-    packageUri: webApiPackageUri
-  }
-  dependsOn: [
-    appServiceWebConfig
-  ]
-}
-
+// Create memory pipeline resources
 resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
   name: 'app-${uniqueName}-memorypipeline'
   location: location
@@ -453,19 +420,18 @@ resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     httpsOnly: true
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
     siteConfig: {
       alwaysOn: true
     }
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 
 resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' = {
   parent: appServiceMemoryPipeline
   name: 'web'
-  dependsOn: [
-    memSubnetConnection
-  ]
   properties: {
     alwaysOn: true
     detailedErrorLoggingEnabled: true
@@ -512,11 +478,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureBlobs:Auth'
-        value: 'ConnectionString'
+        value: 'AzureIdentity'
       }
       {
-        name: 'KernelMemory:Services:AzureBlobs:ConnectionString'
-        value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
+        name: 'KernelMemory:Services:AzureBlobs:Account'
+        value: storage.name
       }
       {
         name: 'KernelMemory:Services:AzureBlobs:Container'
@@ -524,11 +490,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureQueue:Auth'
-        value: 'ConnectionString'
+        value: 'AzureIdentity'
       }
       {
-        name: 'KernelMemory:Services:AzureQueue:ConnectionString'
-        value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
+        name: 'KernelMemory:Services:AzureQueue:Account'
+        value: storage.name
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Auth'
@@ -536,15 +502,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Endpoint'
-        value: memoryStore == 'AzureAISearch' ? 'https://${azureAISearch.name}.search.windows.net' : ''
+        value: deployNewAISearch ? 'https://${azureAISearch.name}.search.windows.net' : aiSearchEndpoint
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:APIKey'
-        value: memoryStore == 'AzureAISearch' ? azureAISearch.listAdminKeys().primaryKey : ''
-      }
-      {
-        name: 'KernelMemory:Services:Qdrant:Endpoint'
-        value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
+        value: deployNewAISearch ? azureAISearch.listAdminKeys().primaryKey : aiSearchKey
       }
       {
         name: 'KernelMemory:Services:AzureOpenAIText:Auth'
@@ -622,18 +584,7 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
   }
 }
 
-resource appServiceMemoryPipelineDeploy 'Microsoft.Web/sites/extensions@2022-09-01' = if (deployPackages) {
-  name: 'MSDeploy'
-  kind: 'string'
-  parent: appServiceMemoryPipeline
-  properties: {
-    packageUri: memoryPipelinePackageUri
-  }
-  dependsOn: [
-    appServiceMemoryPipelineConfig
-  ]
-}
-
+// Create Web Searcher Plugin resources
 resource functionAppWebSearcherPlugin 'Microsoft.Web/sites@2022-09-01' = if (deployWebSearcherPlugin) {
   name: 'function-${uniqueName}-websearcher-plugin'
   location: location
@@ -647,6 +598,9 @@ resource functionAppWebSearcherPlugin 'Microsoft.Web/sites@2022-09-01' = if (dep
     siteConfig: {
       alwaysOn: true
     }
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 
@@ -665,8 +619,8 @@ resource functionAppWebSearcherPluginConfig 'Microsoft.Web/sites/config@2022-09-
         value: 'dotnet-isolated'
       }
       {
-        name: 'AzureWebJobsStorage'
-        value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
+        name: 'AzureWebJobsStorage__accountName'
+        value: storage.name
       }
       {
         name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
@@ -680,18 +634,7 @@ resource functionAppWebSearcherPluginConfig 'Microsoft.Web/sites/config@2022-09-
   }
 }
 
-resource functionAppWebSearcherDeploy 'Microsoft.Web/sites/extensions@2022-09-01' = if (deployPackages && deployWebSearcherPlugin) {
-  name: 'MSDeploy'
-  kind: 'string'
-  parent: functionAppWebSearcherPlugin
-  properties: {
-    packageUri: webSearcherPackageUri
-  }
-  dependsOn: [
-    functionAppWebSearcherPluginConfig
-  ]
-}
-
+// Create and configure App Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: 'appins-${uniqueName}'
   location: location
@@ -708,19 +651,16 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource appInsightExtensionWeb 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
   parent: appServiceWeb
   name: 'Microsoft.ApplicationInsights.AzureWebSites'
-  dependsOn: [ appServiceWebDeploy ]
 }
 
 resource appInsightExtensionMemory 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
   parent: appServiceMemoryPipeline
   name: 'Microsoft.ApplicationInsights.AzureWebSites'
-  dependsOn: [ appServiceMemoryPipelineDeploy ]
 }
 
 resource appInsightExtensionWebSearchPlugin 'Microsoft.Web/sites/siteextensions@2022-09-01' = if (deployWebSearcherPlugin) {
   parent: functionAppWebSearcherPlugin
   name: 'Microsoft.ApplicationInsights.AzureWebSites'
-  dependsOn: [ functionAppWebSearcherDeploy ]
 }
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -742,6 +682,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
   }
 }
 
+// Create storage account for function app
 resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: 'st${rgIdHash}' // Not using full unique name to avoid hitting 24 char limit
   location: location
@@ -752,70 +693,46 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   properties: {
     supportsHttpsTrafficOnly: true
     allowBlobPublicAccess: false
-  }
-  resource fileservices 'fileServices' = if (memoryStore == 'Qdrant') {
-    name: 'default'
-    resource share 'shares' = {
-      name: storageFileShareName
-    }
+    defaultToOAuthAuthentication: true
   }
 }
 
-resource appServicePlanQdrant 'Microsoft.Web/serverfarms@2022-03-01' = if (memoryStore == 'Qdrant') {
-  name: 'asp-${uniqueName}-qdrant'
-  location: location
-  kind: 'linux'
-  sku: {
-    name: 'P1v3'
-  }
+// Assign access to the funciton app, web api and the memory pipeline apps to the storage account
+@description('This is the built-in Storage Account Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage')
+resource storageContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+}
+
+resource storageAccessFunctionApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployWebSearcherPlugin) {
+  name: guid('${functionAppWebSearcherPlugin.name}-storage-access-${uniqueName}')
+  scope: storage
   properties: {
-    reserved: true
+    roleDefinitionId: storageContributorRoleDefinition.id
+    principalId: functionAppWebSearcherPlugin.identity.principalId
   }
 }
 
-resource appServiceQdrant 'Microsoft.Web/sites@2022-09-01' = if (memoryStore == 'Qdrant') {
-  name: 'app-${uniqueName}-qdrant'
-  location: location
-  kind: 'app,linux,container'
+resource storageAccessWebApi 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceWeb.name}-storage-access-${uniqueName}')
+  scope: storage
   properties: {
-    serverFarmId: appServicePlanQdrant.id
-    httpsOnly: true
-    reserved: true
-    clientCertMode: 'Required'
-    virtualNetworkSubnetId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[1].id : null
-    siteConfig: {
-      numberOfWorkers: 1
-      linuxFxVersion: 'DOCKER|qdrant/qdrant:latest'
-      alwaysOn: true
-      vnetRouteAllEnabled: true
-      ipSecurityRestrictions: [
-        {
-          vnetSubnetResourceId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
-          action: 'Allow'
-          priority: 300
-          name: 'Allow front vnet'
-        }
-        {
-          ipAddress: 'Any'
-          action: 'Deny'
-          priority: 2147483647
-          name: 'Deny all'
-        }
-      ]
-      azureStorageAccounts: {
-        aciqdrantshare: {
-          type: 'AzureFiles'
-          accountName: memoryStore == 'Qdrant' ? storage.name : 'notdeployed'
-          shareName: storageFileShareName
-          mountPath: '/qdrant/storage'
-          accessKey: memoryStore == 'Qdrant' ? storage.listKeys().keys[0].value : ''
-        }
-      }
-    }
+    roleDefinitionId: storageContributorRoleDefinition.id
+    principalId: appServiceWeb.identity.principalId
   }
 }
 
-resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (memoryStore == 'AzureAISearch') {
+resource storageAccessMemoryPipeline 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceMemoryPipeline.name}-storage-access-${uniqueName}')
+  scope: storage
+  properties: {
+    roleDefinitionId: storageContributorRoleDefinition.id
+    principalId: appServiceMemoryPipeline.identity.principalId
+  }
+}
+
+// Create Azure AI Search resources
+resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (deployNewAISearch) {
   name: 'acs-${uniqueName}'
   location: location
   sku: {
@@ -827,131 +744,7 @@ resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (memory
   }
 }
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' = if (memoryStore == 'Qdrant') {
-  name: 'vnet-${uniqueName}'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'webSubnet'
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-          networkSecurityGroup: {
-            id: webNsg.id
-          }
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.Web'
-              locations: [
-                '*'
-              ]
-            }
-          ]
-          delegations: [
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverfarms'
-              }
-            }
-          ]
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-      {
-        name: 'qdrantSubnet'
-        properties: {
-          addressPrefix: '10.0.2.0/24'
-          networkSecurityGroup: {
-            id: qdrantNsg.id
-          }
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.Web'
-              locations: [
-                '*'
-              ]
-            }
-          ]
-          delegations: [
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverfarms'
-              }
-            }
-          ]
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-    ]
-  }
-}
-
-resource webNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = if (memoryStore == 'Qdrant') {
-  name: 'nsg-${uniqueName}-webapi'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'AllowAnyHTTPSInbound'
-        properties: {
-          protocol: 'TCP'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 100
-          direction: 'Inbound'
-        }
-      }
-    ]
-  }
-}
-
-resource qdrantNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = if (memoryStore == 'Qdrant') {
-  name: 'nsg-${uniqueName}-qdrant'
-  location: location
-  properties: {
-    securityRules: []
-  }
-}
-
-resource webSubnetConnection 'Microsoft.Web/sites/virtualNetworkConnections@2022-09-01' = if (memoryStore == 'Qdrant') {
-  parent: appServiceWeb
-  name: 'webSubnetConnection'
-  properties: {
-    vnetResourceId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
-    isSwift: true
-  }
-}
-
-resource memSubnetConnection 'Microsoft.Web/sites/virtualNetworkConnections@2022-09-01' = if (memoryStore == 'Qdrant') {
-  parent: appServiceMemoryPipeline
-  name: 'memSubnetConnection'
-  properties: {
-    vnetResourceId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
-    isSwift: true
-  }
-}
-
-resource qdrantSubnetConnection 'Microsoft.Web/sites/virtualNetworkConnections@2022-09-01' = if (memoryStore == 'Qdrant') {
-  parent: appServiceQdrant
-  name: 'qdrantSubnetConnection'
-  properties: {
-    vnetResourceId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[1].id : null
-    isSwift: true
-  }
-}
-
+// Create CosmosDB resources
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = if (deployCosmosDB) {
   name: toLower('cosmos-${uniqueName}')
   location: location
@@ -965,6 +758,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = if (
       }
     ]
     databaseAccountOfferType: 'Standard'
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 
@@ -1102,6 +898,39 @@ resource memorySourcesContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDataba
   }
 }
 
+// Create custom Cosmos role and assign to web app identity
+resource customCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2023-04-15' = {
+  name: guid('custom-cosmos-role-${uniqueName}')
+  parent: cosmosAccount
+  properties: {
+    roleName: 'CustomPasswordlessReadWrite'
+    type: 'CustomRole'
+    permissions: [
+      {
+        dataActions: [
+          'Microsoft.DocumentDB/databaseAccounts/readMetadata'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/items/*'
+          'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/*'
+        ]
+      }
+    ]
+    assignableScopes: [
+      cosmosAccount.id
+    ]
+  }
+}
+
+resource customCosmosRoleAccess 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = {
+  name: guid('web-api-cosmos-access-${uniqueName}')
+  parent: cosmosAccount
+  properties: {
+    roleDefinitionId: customCosmosRole.id
+    principalId: appServiceWeb.identity.principalId
+    scope: cosmosAccount.id
+  }
+}
+
+// Create Cognitive Services resources
 resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = if (deploySpeechServices) {
   name: 'cog-speech-${uniqueName}'
   location: location
@@ -1149,6 +978,7 @@ resource bingSearchService 'Microsoft.Bing/accounts@2020-06-10' = if (deployWebS
   kind: 'Bing.Search.v7'
 }
 
+// Generate outputs
 output webapiUrl string = appServiceWeb.properties.defaultHostName
 output webapiName string = appServiceWeb.name
 output memoryPipelineName string = appServiceMemoryPipeline.name
