@@ -45,7 +45,9 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
             },
         };
-        this._client = new CosmosClient(connectionString, new DefaultAzureCredential(), options);
+        // Use the following when testing locally
+        this._client = new CosmosClient(connectionString, new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = "16b3c013-d300-468d-ac64-7eda0820b6d3" }), options);
+        //this._client = new CosmosClient(connectionString, new DefaultAzureCredential(), options);
         this._container = this._client.GetContainer(database, container);
     }
 
@@ -144,6 +146,6 @@ public class CosmosDbCopilotChatMessageContext : CosmosDbContext<CopilotChatMess
     {
         return Task.Run<IEnumerable<CopilotChatMessage>>(
                 () => this._container.GetItemLinqQueryable<CopilotChatMessage>(true)
-                        .Where(predicate).OrderByDescending(m => m.Timestamp).Skip(skip).Take(count).AsEnumerable());
+                        .Where(predicate).OrderByDescending(m => m.Timestamp).Skip(skip).AsEnumerable().Take(count));
     }
 }
