@@ -79,6 +79,478 @@ var uniqueName = '${name}-${rgIdHash}'
 @description('Name of the Web App to create, use the value in customWebAppName, if provided')
 var webAppName = customWebAppName == null ? 'app-${uniqueName}-webapi' : customWebAppName
 
+// Virtual network resources
+resource vNetNSG_default 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-default-${uniqueName}'
+  location: location
+  properties: {
+    securityRules: []
+  }
+}
+
+resource vNetNSG_appservice 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-appservice-${uniqueName}'
+  location: location
+  properties: {
+    securityRules: []
+  }
+}
+
+resource vNet 'Microsoft.Network/virtualNetworks@2024-03-01' = {
+  name: 'vnet-${uniqueName}'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+          networkSecurityGroup: {
+            id: vNetNSG_default.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+      {
+        name: 'app-service'
+        properties: {
+          addressPrefix: '10.0.1.0/28'
+          networkSecurityGroup: {
+            id: vNetNSG_appservice.id
+          }
+          delegations: [
+            {
+              properties: {
+                  serviceName: 'Microsoft.Web/serverfarms'
+              }
+            }
+          ]
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+    ]
+  }
+}
+
+// Private DNS Zones
+resource privateblob_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+  location: 'global'
+}
+
+resource privatecog_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.cognitiveservices.azure.com'
+  location: 'global'
+}
+
+resource privatecosmos_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+}
+
+resource privateque_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.queue.${environment().suffixes.storage}'
+  location: 'global'
+}
+
+resource privatesearch_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.search.windows.net'
+  location: 'global'
+}
+
+resource privatetable_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.table.${environment().suffixes.storage}'
+  location: 'global'
+}
+
+resource privateweb_DNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.azurewebsites.net'
+  location: 'global'
+}
+
+// Private DNS Zone links
+resource privateblob_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateblob_DNSZone
+  name: 'privateblob_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privatecog_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privatecog_DNSZone
+  name: 'privatecog_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privatecosmos_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privatecosmos_DNSZone
+  name: 'privatecosmos_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privateque_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateque_DNSZone
+  name: 'privateque_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privatesearch_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privatesearch_DNSZone
+  name: 'privatesearch_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privatetable_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privatetable_DNSZone
+  name: 'privatetable_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+resource privateweb_Link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateweb_DNSZone
+  name: 'privateweb_Link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vNet.id
+    }
+  }
+}
+
+// Private Endpoints
+resource privateblob_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = {
+  name: 'privateblob_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privateblob-linkConnection'
+        properties: {
+          privateLinkServiceId: storage.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privatecog_Ocr_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = {
+  name: 'privatecog_Ocr_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privatecog-ocr-linkConnection'
+        properties: {
+          privateLinkServiceId: ocrAccount.id
+          groupIds: [
+            'account'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privatecog_Speech_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = if (deploySpeechServices) {
+  name: 'privatecog_Speech_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privatecog-speech-linkConnection'
+        properties: {
+          privateLinkServiceId: speechAccount.id
+          groupIds: [
+            'account'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privatecosmos_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = if (deployCosmosDB) {
+  name: 'privatecosmos_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privatecosmos-linkConnection'
+        properties: {
+          privateLinkServiceId: cosmosAccount.id
+          groupIds: [
+            'Sql'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privateque_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = {
+  name: 'privateque_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privateque-linkConnection'
+        properties: {
+          privateLinkServiceId: storage.id
+          groupIds: [
+            'queue'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privatesearch_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = if (deployNewAISearch) {
+  name: 'privatesearch_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privatesearch-linkConnection'
+        properties: {
+          privateLinkServiceId: azureAISearch.id
+          groupIds: [
+            'searchService'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privatetable_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = {
+  name: 'privatetable_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'default')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privatetable-linkConnection'
+        properties: {
+          privateLinkServiceId: storage.id
+          groupIds: [
+            'table'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privateweb_WebSearcher_Endpoint 'Microsoft.Network/privateEndpoints@2024-03-01' = if (deployWebSearcherPlugin) {
+  name: 'privateweb_WebSearcher_Endpoint'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'app-service')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'privateweb-websearcher-linkConnection'
+        properties: {
+          privateLinkServiceId: functionAppWebSearcherPlugin.id
+          groupIds: [
+            'sites'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// DNS Zone Groups
+resource privateblob_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  parent: privateblob_Endpoint
+  name: 'privateblob_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privateblob_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privatecog_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  parent: privatecog_Ocr_Endpoint
+  name: 'privatecog_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privatecog_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privatecog_Speech_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = if (deploySpeechServices) {
+  parent: privatecog_Speech_Endpoint
+  name: 'privatecog_Speech_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privatecog_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privatecosmos_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = if (deployCosmosDB) {
+  parent: privatecosmos_Endpoint
+  name: 'privatecosmos_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privatecosmos_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privateque_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  parent: privateque_Endpoint
+  name: 'privateque_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privateque_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privatetable_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  parent: privatetable_Endpoint
+  name: 'privatetable_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privatetable_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privatesearch_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = if (deployNewAISearch) {
+  parent: privatesearch_Endpoint
+  name: 'privatesearch_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privatesearch_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource privateweb_DnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = if (deployWebSearcherPlugin) {
+  parent: privateweb_WebSearcher_Endpoint
+  name: 'privateweb_DnsZoneGroup'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privateweb_DNSZone.id
+        }
+      }
+    ]
+  }
+}
+
+// Create Azure OpenAI resources
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (deployNewAzureOpenAI) {
   name: 'ai-${uniqueName}'
   location: location
@@ -91,7 +563,6 @@ resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (deployNe
   }
 }
 
-// Create Azure OpenAI resources
 resource openAI_completionModel 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (deployNewAzureOpenAI) {
   parent: openAI
   name: completionModel
@@ -149,6 +620,9 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
     siteConfig: {
       healthCheckPath: '/healthz'
     }
+    vnetRouteAllEnabled: true
+    virtualNetworkSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'app-service')
+    publicNetworkAccess: 'Disabled'
   }
   identity: {
     type: 'SystemAssigned'
@@ -168,9 +642,10 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
       supportCredentials: true
     }
     detailedErrorLoggingEnabled: true
-    minTlsVersion: '1.2'
+    minTlsVersion: '1.3'
     netFrameworkVersion: 'v6.0'
     use32BitWorkerProcess: false
+    vnetName: vNet.name
     vnetRouteAllEnabled: true
     webSocketsEnabled: true
     appSettings: concat([
@@ -328,15 +803,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory:Services:AzureAISearch:Auth'
-          value: 'ApiKey'
+          value: 'AzureIdentity'
         }
         {
           name: 'KernelMemory:Services:AzureAISearch:Endpoint'
           value: deployNewAISearch ? 'https://${azureAISearch.name}.search.windows.net' : aiSearchEndpoint
-        }
-        {
-          name: 'KernelMemory:Services:AzureAISearch:APIKey'
-          value: deployNewAISearch ? azureAISearch.listAdminKeys().primaryKey : aiSearchKey
         }
         {
           name: 'KernelMemory:Services:AzureOpenAIText:Auth'
@@ -423,6 +894,7 @@ resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
     siteConfig: {
       alwaysOn: true
     }
+    publicNetworkAccess: 'Disabled'
   }
   identity: {
     type: 'SystemAssigned'
@@ -435,7 +907,7 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
   properties: {
     alwaysOn: true
     detailedErrorLoggingEnabled: true
-    minTlsVersion: '1.2'
+    minTlsVersion: '1.3'
     netFrameworkVersion: 'v6.0'
     use32BitWorkerProcess: false
     vnetRouteAllEnabled: true
@@ -498,15 +970,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Auth'
-        value: 'ApiKey'
+        value: 'AzureIdentity'
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Endpoint'
         value: deployNewAISearch ? 'https://${azureAISearch.name}.search.windows.net' : aiSearchEndpoint
-      }
-      {
-        name: 'KernelMemory:Services:AzureAISearch:APIKey'
-        value: deployNewAISearch ? azureAISearch.listAdminKeys().primaryKey : aiSearchKey
       }
       {
         name: 'KernelMemory:Services:AzureOpenAIText:Auth'
@@ -542,15 +1010,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:Auth'
-        value: 'ApiKey'
+        value: 'AzureIdentity'
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:Endpoint'
         value: ocrAccount.properties.endpoint
-      }
-      {
-        name: 'KernelMemory:Services:AzureFormRecognizer:APIKey'
-        value: ocrAccount.listKeys().key1
       }
       {
         name: 'KernelMemory:Services:OpenAI:TextModel'
@@ -598,6 +1062,7 @@ resource functionAppWebSearcherPlugin 'Microsoft.Web/sites@2022-09-01' = if (dep
     siteConfig: {
       alwaysOn: true
     }
+    publicNetworkAccess: 'Disabled'
   }
   identity: {
     type: 'SystemAssigned'
@@ -608,7 +1073,7 @@ resource functionAppWebSearcherPluginConfig 'Microsoft.Web/sites/config@2022-09-
   parent: functionAppWebSearcherPlugin
   name: 'web'
   properties: {
-    minTlsVersion: '1.2'
+    minTlsVersion: '1.3'
     appSettings: [
       {
         name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -694,6 +1159,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     supportsHttpsTrafficOnly: true
     allowBlobPublicAccess: false
     defaultToOAuthAuthentication: true
+    publicNetworkAccess: 'Disabled'
   }
 }
 
@@ -772,8 +1238,26 @@ resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (deploy
     name: 'basic'
   }
   properties: {
+    disableLocalAuth: true
     replicaCount: 1
     partitionCount: 1
+    publicNetworkAccess: 'disabled'
+  }
+}
+
+// Assign access to the search resource for the web identity 
+@description('This is the built-in Search Index Data Reader role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage:~:text=Search%20Index%20Data%20Reader')
+resource searchReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+}
+
+resource searchReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('${appServiceWeb.name}-search-reader-${uniqueName}')
+  scope: azureAISearch
+  properties: {
+    roleDefinitionId: searchReaderRoleDefinition.id
+    principalId: appServiceWeb.identity.principalId
   }
 }
 
@@ -791,6 +1275,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = if (
       }
     ]
     databaseAccountOfferType: 'Standard'
+    publicNetworkAccess: 'Disabled'
   }
   identity: {
     type: 'SystemAssigned'
@@ -811,6 +1296,12 @@ resource messageContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   parent: cosmosDatabase
   name: 'chatmessages'
   properties: {
+    options: {
+      throughput: 100
+      autoscaleSettings: {
+        maxThroughput: 1000
+      }
+    }
     resource: {
       id: 'chatmessages'
       indexingPolicy: {
@@ -842,6 +1333,12 @@ resource sessionContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   parent: cosmosDatabase
   name: 'chatsessions'
   properties: {
+    options: {
+      throughput: 100
+      autoscaleSettings: {
+        maxThroughput: 1000
+      }
+    }
     resource: {
       id: 'chatsessions'
       indexingPolicy: {
@@ -873,6 +1370,12 @@ resource participantContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabase
   parent: cosmosDatabase
   name: 'chatparticipants'
   properties: {
+    options: {
+      throughput: 100
+      autoscaleSettings: {
+        maxThroughput: 1000
+      }
+    }
     resource: {
       id: 'chatparticipants'
       indexingPolicy: {
@@ -904,6 +1407,12 @@ resource memorySourcesContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDataba
   parent: cosmosDatabase
   name: 'chatmemorysources'
   properties: {
+    options: {
+      throughput: 100
+      autoscaleSettings: {
+        maxThroughput: 1000
+      }
+    }
     resource: {
       id: 'chatmemorysources'
       indexingPolicy: {
@@ -976,10 +1485,11 @@ resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = if (d
   }
   properties: {
     customSubDomainName: 'cog-speech-${uniqueName}'
+    disableLocalAuth: true
     networkAcls: {
       defaultAction: 'Allow'
     }
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: 'Disabled'
   }
 }
 
@@ -995,10 +1505,11 @@ resource ocrAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   }
   properties: {
     customSubDomainName: 'cog-ocr-${uniqueName}'
+    disableLocalAuth:true
     networkAcls: {
       defaultAction: 'Allow'
     }
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: 'Disabled'
   }
 }
 
