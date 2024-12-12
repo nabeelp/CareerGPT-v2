@@ -581,7 +581,7 @@ resource appServiceWeb 'Microsoft.Web/sites@2022-09-01' = {
     }
     vnetRouteAllEnabled: true
     virtualNetworkSubnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vNet.name, 'app-service')
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Enabled'
   }
   identity: {
     type: 'SystemAssigned'
