@@ -1,8 +1,5 @@
 /*
-Copyright (c) Microsoft. All rights reserved.
-Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-Bicep template for deploying CopilotChat Azure resources.
+TODO: Ensure that identity used to deploy has permissions to do role assignments
 */
 
 @description('Name for the deployment consisting of alphanumeric characters or dashes (\'-\')')
@@ -54,9 +51,6 @@ param deployNewAISearch bool = false
 
 @description('Existing Azure AI Search endpoint')
 param aiSearchEndpoint string
-
-@description('Existing Azure AI Search key')
-param aiSearchKey string
 
 @description('Whether to deploy Azure Speech Services to enable input by voice')
 param deploySpeechServices bool = true
@@ -123,6 +117,7 @@ resource vNet 'Microsoft.Network/virtualNetworks@2024-03-01' = {
           }
           delegations: [
             {
+              name: 'delegation'
               properties: {
                   serviceName: 'Microsoft.Web/serverfarms'
               }
@@ -920,12 +915,12 @@ resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (deploy
 
 // Assign access to the search resource for the web identity 
 @description('This is the built-in Search Index Data Reader role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage:~:text=Search%20Index%20Data%20Reader')
-resource searchReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource searchReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = if (deployNewAISearch){
   scope: subscription()
   name: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
 }
 
-resource searchReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource searchReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployNewAISearch){
   name: guid('${appServiceWeb.name}-search-reader-${uniqueName}')
   scope: azureAISearch
   properties: {
@@ -970,7 +965,6 @@ resource messageContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   name: 'chatmessages'
   properties: {
     options: {
-      throughput: 100
       autoscaleSettings: {
         maxThroughput: 1000
       }
@@ -1007,7 +1001,6 @@ resource sessionContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   name: 'chatsessions'
   properties: {
     options: {
-      throughput: 100
       autoscaleSettings: {
         maxThroughput: 1000
       }
@@ -1044,7 +1037,6 @@ resource participantContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabase
   name: 'chatparticipants'
   properties: {
     options: {
-      throughput: 100
       autoscaleSettings: {
         maxThroughput: 1000
       }
@@ -1081,7 +1073,6 @@ resource memorySourcesContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDataba
   name: 'chatmemorysources'
   properties: {
     options: {
-      throughput: 100
       autoscaleSettings: {
         maxThroughput: 1000
       }
@@ -1114,7 +1105,7 @@ resource memorySourcesContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDataba
 }
 
 // Create custom Cosmos role and assign to web app identity
-resource customCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2023-04-15' = {
+resource customCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2023-04-15' = if (deployCosmosDB) {
   name: guid('custom-cosmos-role-${uniqueName}')
   parent: cosmosAccount
   properties: {
@@ -1135,7 +1126,7 @@ resource customCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefiniti
   }
 }
 
-resource customCosmosRoleAccess 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = {
+resource customCosmosRoleAccess 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = if (deployCosmosDB) {
   name: guid('web-api-cosmos-access-${uniqueName}')
   parent: cosmosAccount
   properties: {
