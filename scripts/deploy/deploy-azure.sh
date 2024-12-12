@@ -31,6 +31,7 @@ usage() {
     echo "  -cm, --completion-model                    The name of the OpenAI completion model to use, e.g. gpt4-o"
     echo "  -das, --deploy-azure-search                Deploy Azure Search"
     echo "  -ais, --ai-search-endpoint                 Azure Search endpoint"
+    echo "  -aisk, --ai-search-key                     Azure Search key"
 }
 
 # Parse arguments
@@ -136,6 +137,11 @@ while [[ $# -gt 0 ]]; do
         shift
         shift
         ;;
+    -aisk | --ai-search-key)
+        AI_SEARCH_KEY="$2"
+        shift
+        shift
+        ;;
     *)
         echo "Unknown option $1"
         usage
@@ -192,6 +198,18 @@ if [[ "${AI_SERVICE_TYPE,,}" = "openai" ]] && [[ -z "$AI_SERVICE_KEY" ]]; then
     exit 1
 fi
 
+# if DEPLOY_AZURE_SEARCH is false and AI_SEARCH_ENDPOINT and AI_SEARCH_KEY are not set, then stop processing
+if [[ "$DEPLOY_AZURE_SEARCH" = false ]] && [[ (-z "$AI_SEARCH_ENDPOINT" || -z "$AI_SEARCH_KEY") ]]; then
+    echo "When --deploy-azure-search is false, --ai-search-endpoint and --ai-search-key must be set."
+    usage
+    exit 1
+fi
+
+# if DEPLOY_AZURE_SEARCH is true, if AI_SEARCH_ENDPOINT or AI_SEARCH_KEY should are set, output a warning
+if [[ "$DEPLOY_AZURE_SEARCH" = true ]] && [[ (-n "$AI_SEARCH_ENDPOINT" || -n "$AI_SEARCH_KEY") ]]; then
+    echo "When --deploy-azure-search is true, --ai-search-endpoint and --ai-search-key will be ignored."
+fi
+
 # If resource group is not set, then set it to rg-DEPLOYMENT_NAME
 if [ -z "$RESOURCE_GROUP" ]; then
     RESOURCE_GROUP="rg-${DEPLOYMENT_NAME}"
@@ -226,7 +244,8 @@ JSON_CONFIG=$(
     "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" },
     "completionModel": { "value": "$COMPLETION_MODEL" },
     "deployNewAISearch": { "value": $([ "$DEPLOY_AZURE_SEARCH" = true ] && echo "true" || echo "false") },
-    "aiSearchEndpoint": { "value": "$([ ! -z "$AI_SEARCH_ENDPOINT" ] && echo "$AI_SEARCH_ENDPOINT")" }
+    "aiSearchEndpoint": { "value": "$([ ! -z "$AI_SEARCH_ENDPOINT" ] && echo "$AI_SEARCH_ENDPOINT")" },
+    "aiSearchKey": { "value": "$([ ! -z "$AI_SEARCH_KEY" ] && echo "$AI_SEARCH_KEY")" }
 }
 EOF
 )
