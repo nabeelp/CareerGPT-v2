@@ -25,7 +25,6 @@ usage() {
     echo "                                             \"AzureAISearch\" (default) and \"Qdrant\""
     echo "  -nc, --no-cosmos-db                        Don't deploy Cosmos DB for chat storage - Use volatile memory instead"
     echo "  -ns, --no-speech-services                  Don't deploy Speech Services to enable speech as chat input"
-    echo "  -ws, --deploy-web-searcher-plugin          Deploy the web searcher plugin"
     echo "  -dd, --debug-deployment                    Switches on verbose template deployment output"
     echo "  -ndp, --no-deploy-package                  Skips deploying binary packages to cloud when set."
     echo "  -app, --app-name                           The name of the app service, if specified."
@@ -111,10 +110,6 @@ while [[ $# -gt 0 ]]; do
         NO_SPEECH_SERVICES=true
         shift
         ;;
-    -ws | --deploy-web-searcher-plugin)
-        DEPLOY_WEB_SEARCHER_PLUGIN=true
-        shift
-        ;;
     -dd | --debug-deployment)
         DEBUG_DEPLOYMENT=true
         shift
@@ -162,7 +157,6 @@ done
 : "${MEMORY_STORE:="AzureAISearch"}"
 : "${NO_COSMOS_DB:=false}"
 : "${NO_SPEECH_SERVICES:=false}"
-: "${DEPLOY_WEB_SEARCHER_PLUGIN:=false}"
 : "${DEPLOY_AZURE_SEARCH:=false}"
 
 # Check mandatory arguments
@@ -247,7 +241,6 @@ JSON_CONFIG=$(
     "memoryStore": { "value": "$MEMORY_STORE" },
     "deployCosmosDB": { "value": $([ "$NO_COSMOS_DB" = true ] && echo "false" || echo "true") },
     "deploySpeechServices": { "value": $([ "$NO_SPEECH_SERVICES" = true ] && echo "false" || echo "true") },
-    "deployWebSearcherPlugin": { "value": $([ "$DEPLOY_WEB_SEARCHER_PLUGIN" = true ] && echo "true" || echo "false") },
     "customWebAppName": { "value": "$([ ! -z "$WEB_APP_NAME" ] && echo "$WEB_APP_NAME")" },
     "completionModel": { "value": "$COMPLETION_MODEL" },
     "deployNewAISearch": { "value": $([ "$DEPLOY_AZURE_SEARCH" = true ] && echo "true" || echo "false") },
