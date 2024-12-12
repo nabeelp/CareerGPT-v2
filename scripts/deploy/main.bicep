@@ -52,6 +52,9 @@ param deployNewAISearch bool = false
 @description('Existing Azure AI Search endpoint')
 param aiSearchEndpoint string
 
+@description('Azure AI Search key')
+param aiSearchKey string
+
 @description('Whether to deploy Azure Speech Services to enable input by voice')
 param deploySpeechServices bool = true
 
@@ -759,7 +762,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Auth'
-        value: 'AzureIdentity'
+        value: 'ApiKey'
+      }
+      {
+        name: 'KernelMemory:Services:AzureAISearch:ApiKey'
+        value: aiSearchKey
       }
       {
         name: 'KernelMemory:Services:AzureAISearch:Endpoint'
